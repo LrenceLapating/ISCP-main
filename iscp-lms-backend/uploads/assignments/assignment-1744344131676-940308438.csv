@@ -1,0 +1,75 @@
+"Daily Sales Report - April 3, 2025"
+
+Summary
+Total Sales,₱2381095.00
+Total Orders,21
+Total Items Sold,665
+
+System Breakdown
+Cafe System - Sales,₱798695.00
+Cafe System - Items Sold,265
+Cafe System - Orders,21
+Inventory System - Sales,₱1582400.00
+Inventory System - Items Sold,400
+
+Combined Sales Details (Most Recent First)
+Product,Quantity Sold,Unit Price,Total,Source
+Cookies & Coffee Frappe,33,₱135.00,₱4455.00,Cafe
+henn,9,₱233.00,₱2097.00,Cafe
+Mango Frappe,18,₱90.00,₱1620.00,Cafe
+lors,9,₱5000.00,₱45000.00,Cafe
+lors,16,₱5000.00,₱80000.00,Cafe
+lemuel,6,₱2323.00,₱13938.00,Cafe
+lors,20,₱5000.00,₱100000.00,Cafe
+lors,89,₱5000.00,₱445000.00,Cafe
+Strawberry Frappe,1,₱90.00,₱90.00,Cafe
+Ube Frappe,1,₱90.00,₱90.00,Cafe
+lemuel,45,₱2323.00,₱104535.00,Cafe
+Avocado Frappe,2,₱90.00,₱180.00,Inventory
+Cookies & Coffee Frappe,4,₱135.00,₱540.00,Inventory
+Pandan Frappe,1,₱90.00,₱90.00,Cafe
+Pandan Frappe,1,₱90.00,₱90.00,Cafe
+Pandan Frappe,1,₱90.00,₱90.00,Cafe
+Pandan Frappe,1,₱90.00,₱90.00,Cafe
+Matcha Frappe,1,₱90.00,₱90.00,Cafe
+Pandan Frappe,1,₱90.00,₱90.00,Cafe
+Ube Frappe,1,₱90.00,₱90.00,Cafe
+Strawberry Frappe,1,₱90.00,₱90.00,Cafe
+henn,18,₱233.00,₱4194.00,Inventory
+Chocolate Frappe,6,₱90.00,₱540.00,Inventory
+lors,268,₱5000.00,₱1340000.00,Inventory
+lemuel,102,₱2323.00,₱236946.00,Inventory
+Ice Matcha Cafe Latte,1,₱115.00,₱115.00,Cafe
+Ice Cappuccino,1,₱115.00,₱115.00,Cafe
+Ice Cappuccino,1,₱115.00,₱115.00,Cafe
+Ice Matcha Cafe Latte,1,₱115.00,₱115.00,Cafe
+Ice Hazelnut Latte,1,₱115.00,₱115.00,Cafe
+Ice Cafe Mocha,1,₱115.00,₱115.00,Cafe
+Ice Matcha Cafe Latte,1,₱115.00,₱115.00,Cafe
+Ice Cappuccino,1,₱115.00,₱115.00,Cafe
+Ice Cappuccino,1,₱115.00,₱115.00,Cafe
+Ice Matcha Cafe Latte,1,₱115.00,₱115.00,Cafe
+
+Cafe Orders Detail
+Order ID,Time,Customer,Items,Total
+476,11:24 PM,Princess,33x Cookies & Coffee Frappe,₱4455.00
+475,11:21 PM,Princess,"9x henn, 18x Mango Frappe",₱3717.00
+474,11:14 PM,Princess,9x lors,₱45000.00
+473,11:13 PM,Princess,16x lors,₱80000.00
+472,11:08 PM,Princess,6x lemuel,₱13938.00
+471,10:50 PM,Princess,20x lors,₱100000.00
+470,10:32 PM,Princess,89x lors,₱445000.00
+469,07:27 PM,Princess,"1x Strawberry Frappe, 1x Ube Frappe, 45x lemuel",₱104715.00
+466,12:26 PM,Princess,1x Pandan Frappe,₱90.00
+467,12:26 PM,Princess,1x Pandan Frappe,₱90.00
+468,12:26 PM,Princess,1x Pandan Frappe,₱90.00
+465,12:20 PM,Princess,"1x Pandan Frappe, 1x Matcha Frappe",₱180.00
+464,12:12 PM,Princess,1x Pandan Frappe,₱90.00
+463,12:02 PM,Princess,"1x Ube Frappe, 1x Strawberry Frappe",₱180.00
+462,12:28 AM,Lors,1x Ice Matcha Cafe Latte,₱115.00
+461,12:25 AM,Lors,1x Ice Cappuccino,₱115.00
+460,12:24 AM,Lors,1x Ice Cappuccino,₱115.00
+459,12:11 AM,Lors,"1x Ice Matcha Cafe Latte, 1x Ice Hazelnut Latte",₱230.00
+458,12:08 AM,Lors,1x Ice Cafe Mocha,₱115.00
+457,12:07 AM,Lors,"1x Ice Matcha Cafe Latte, 1x Ice Cappuccino",₱230.00
+456,12:03 AM,Lors,"1x Ice Cappuccino, 1x Ice Matcha Cafe Latte",₱230.00
