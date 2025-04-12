@@ -39,6 +39,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 import facultyService from '../services/FacultyService';
 import FacultyNotificationMenu from './FacultyNotificationMenu';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface FacultyLayoutProps {
   children: ReactNode;
@@ -51,9 +52,10 @@ const FacultyLayout: React.FC<FacultyLayoutProps> = ({ children, title }) => {
   const { authState, logout } = useAuth();
   const { user } = authState;
   const theme = useTheme();
+  const { language, t } = useLanguage();
   const location = useLocation();
   const navigate = useNavigate();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isMobile = useMediaQuery(theme.breakpoints.down('lg'));
   const [mobileOpen, setMobileOpen] = useState(false);
   const [firstName, setFirstName] = useState<string>('');
   const [lastName, setLastName] = useState<string>('');
@@ -123,14 +125,55 @@ const FacultyLayout: React.FC<FacultyLayoutProps> = ({ children, title }) => {
     navigate('/login');
   };
 
-  const facultyNavigationItems = [
-    { icon: <Dashboard />, text: "Dashboard", path: "/faculty/dashboard" },
-    { icon: <Book />, text: "My Courses", path: "/faculty/courses" },
-    { icon: <Assignment />, text: "Assignments", path: "/faculty/assignments" },
-    { icon: <DescriptionOutlined />, text: "Materials", path: "/faculty/materials" },
-    { icon: <People />, text: "Students", path: "/faculty/students" },
-    { icon: <Email />, text: "Messages", path: "/faculty/messages" },
-    { icon: <Settings />, text: "Settings", path: "/faculty/settings" }
+  const navigationItems = [
+    { 
+      path: '/faculty/dashboard', 
+      text: t('dashboard'), 
+      icon: <Dashboard />, 
+      active: location.pathname === '/faculty/dashboard' 
+    },
+    { 
+      path: '/faculty/courses', 
+      text: language === 'English' ? 'My Courses' : 'Mga Kurso Ko', 
+      icon: <Book />, 
+      active: location.pathname.includes('/faculty/courses') && !location.pathname.includes('/materials') 
+    },
+    { 
+      path: '/faculty/assignments', 
+      text: t('assignments'), 
+      icon: <Assignment />, 
+      active: location.pathname.includes('/faculty/assignments') && !location.pathname.includes('/submissions') 
+    },
+    { 
+      path: '/faculty/submissions', 
+      text: language === 'English' ? 'Submissions' : 'Mga Pagsusumite', 
+      icon: <Grade />, 
+      active: location.pathname.includes('/faculty/submissions') 
+    },
+    { 
+      path: '/faculty/materials', 
+      text: t('materials'), 
+      icon: <DescriptionOutlined />, 
+      active: location.pathname.includes('/faculty/materials') 
+    },
+    { 
+      path: '/faculty/students', 
+      text: t('students'), 
+      icon: <People />, 
+      active: location.pathname.includes('/faculty/students') 
+    },
+    { 
+      path: '/faculty/messages', 
+      text: t('messages'), 
+      icon: <Message />, 
+      active: location.pathname.includes('/faculty/messages') 
+    },
+    { 
+      path: '/faculty/settings', 
+      text: t('settings'), 
+      icon: <Settings />, 
+      active: location.pathname.includes('/faculty/settings') 
+    }
   ];
 
   const drawer = (
@@ -143,11 +186,11 @@ const FacultyLayout: React.FC<FacultyLayoutProps> = ({ children, title }) => {
       }}>
         <School sx={{ mr: 1.5, fontSize: 28 }} />
         <Typography variant="h6" component="div" sx={{ fontWeight: 'bold' }}>
-          ISCP LMS
+          {language === 'English' ? 'ISCP Faculty' : 'ISCP Guro'}
         </Typography>
       </Box>
       <List sx={{ flexGrow: 1 }}>
-        {facultyNavigationItems.map((item) => (
+        {navigationItems.map((item) => (
           <ListItem 
             key={item.text}
             component={RouterLink} 
@@ -155,19 +198,19 @@ const FacultyLayout: React.FC<FacultyLayoutProps> = ({ children, title }) => {
             sx={{ 
               py: 1.5,
               px: 3,
-              color: location.pathname === item.path ? '#fff' : 'rgba(255, 255, 255, 0.7)',
-              bgcolor: location.pathname === item.path ? 'rgba(25, 118, 210, 0.15)' : 'transparent',
+              color: item.active ? '#fff' : 'rgba(255, 255, 255, 0.7)',
+              bgcolor: item.active ? 'rgba(25, 118, 210, 0.15)' : 'transparent',
               '&:hover': { 
-                bgcolor: location.pathname === item.path ? 'rgba(25, 118, 210, 0.25)' : 'rgba(255, 255, 255, 0.05)',
+                bgcolor: item.active ? 'rgba(25, 118, 210, 0.25)' : 'rgba(255, 255, 255, 0.05)',
                 color: '#fff',
               },
-              borderLeft: location.pathname === item.path ? `4px solid ${theme.palette.primary.main}` : '4px solid transparent',
+              borderLeft: item.active ? `4px solid ${theme.palette.primary.main}` : '4px solid transparent',
               textDecoration: 'none',
               transition: 'all 0.2s ease'
             }}
           >
             <ListItemIcon sx={{ 
-              color: location.pathname === item.path ? theme.palette.primary.main : 'rgba(255, 255, 255, 0.7)',
+              color: item.active ? theme.palette.primary.main : 'rgba(255, 255, 255, 0.7)',
               minWidth: 40 
             }}>
               {item.icon}
@@ -176,7 +219,7 @@ const FacultyLayout: React.FC<FacultyLayoutProps> = ({ children, title }) => {
               primary={item.text} 
               primaryTypographyProps={{ 
                 fontSize: '0.9rem',
-                fontWeight: location.pathname === item.path ? 600 : 400 
+                fontWeight: item.active ? 600 : 400 
               }}
             />
           </ListItem>
@@ -201,7 +244,7 @@ const FacultyLayout: React.FC<FacultyLayoutProps> = ({ children, title }) => {
             <Logout />
           </ListItemIcon>
           <ListItemText 
-            primary="Logout" 
+            primary={t('logout')} 
             primaryTypographyProps={{ fontSize: '0.9rem' }} 
           />
         </ListItem>

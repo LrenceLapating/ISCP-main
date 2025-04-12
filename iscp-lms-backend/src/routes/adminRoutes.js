@@ -4,6 +4,7 @@ const { pool } = require('../config/db');
 const { verifyToken, isAdmin } = require('../middleware/auth');
 const notificationHelpers = require('../utils/notificationHelpers');
 const announcementController = require('../controllers/announcementController');
+const adminController = require('../controllers/adminController');
 
 // Get all approved courses
 router.get('/courses/approved', verifyToken, isAdmin, async (req, res) => {
@@ -447,159 +448,24 @@ router.put('/courses/:courseId', verifyToken, isAdmin, async (req, res) => {
   }
 });
 
-module.exports = router; 
+// Get all courses
+router.get('/courses', verifyToken, isAdmin, adminController.getCourses);
 
-// =========== User Management Routes ===========
+// Update course request status
+router.patch('/courses/:id/request-status', verifyToken, isAdmin, adminController.updateCourseRequestStatus);
 
-// Get all users 
-router.get('/users', verifyToken, isAdmin, async (req, res) => {
-  try {
-    // Query to get all users with their settings if available
-    const query = `
-      SELECT 
-        u.id, 
-        u.email, 
-        u.full_name as fullName, 
-        u.role, 
-        u.campus,
-        u.status,
-        COALESCE(us.profile_picture, u.profile_image) as profileImage
-      FROM users u
-      LEFT JOIN user_settings us ON u.id = us.user_id
-      ORDER BY u.full_name
-    `;
-    
-    const [users] = await pool.query(query);
-    
-    // If any user doesn't have status, default to 'active'
-    const usersWithStatus = users.map(user => ({
-      ...user,
-      status: user.status || 'active'
-    }));
-    
-    res.json(usersWithStatus);
-  } catch (error) {
-    console.error('Error fetching users:', error);
-    res.status(500).json({ message: 'Server error while fetching users' });
-  }
-});
+// User Management
+router.get('/users', verifyToken, isAdmin, adminController.getUsers);
+router.post('/users', verifyToken, isAdmin, adminController.createUser);
+router.put('/users/:id', verifyToken, isAdmin, adminController.updateUser);
+router.delete('/users/:id', verifyToken, isAdmin, adminController.deleteUser);
+router.patch('/users/:id/status', verifyToken, isAdmin, adminController.updateUserStatus);
 
-// Update user
-router.put('/users/:userId', verifyToken, isAdmin, async (req, res) => {
-  try {
-    const { userId } = req.params;
-    const { fullName, email, role, campus, status } = req.body;
-    
-    // Check if user exists
-    const [userCheck] = await pool.query('SELECT * FROM users WHERE id = ?', [userId]);
-    
-    if (userCheck.length === 0) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-    
-    // Update user with status field
-    await pool.query(
-      'UPDATE users SET full_name = ?, email = ?, role = ?, campus = ?, status = ? WHERE id = ?',
-      [fullName, email, role, campus, status || 'active', userId]
-    );
-    
-    // Get updated user
-    const [updatedUser] = await pool.query(
-      `SELECT 
-        u.id, 
-        u.email, 
-        u.full_name as fullName, 
-        u.role, 
-        u.campus,
-        u.status,
-        COALESCE(us.profile_picture, u.profile_image) as profileImage
-      FROM users u
-      LEFT JOIN user_settings us ON u.id = us.user_id
-      WHERE u.id = ?`,
-      [userId]
-    );
-    
-    res.json(updatedUser[0]);
-  } catch (error) {
-    console.error('Error updating user:', error);
-    res.status(500).json({ message: 'Server error while updating user' });
-  }
-});
-
-// Toggle user status
-router.patch('/users/:userId/status', verifyToken, isAdmin, async (req, res) => {
-  try {
-    const { userId } = req.params;
-    const { status } = req.body;
-    
-    if (!status || !['active', 'inactive'].includes(status)) {
-      return res.status(400).json({ message: 'Invalid status' });
-    }
-    
-    // Check if user exists
-    const [userCheck] = await pool.query('SELECT * FROM users WHERE id = ?', [userId]);
-    
-    if (userCheck.length === 0) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-    
-    // Update user status
-    await pool.query('UPDATE users SET status = ? WHERE id = ?', [status, userId]);
-    
-    res.json({ 
-      message: `User status updated to ${status}`, 
-      status,
-      userId: parseInt(userId)
-    });
-  } catch (error) {
-    console.error('Error updating user status:', error);
-    res.status(500).json({ message: 'Server error while updating user status' });
-  }
-});
-
-// Delete user
-router.delete('/users/:userId', verifyToken, isAdmin, async (req, res) => {
-  try {
-    const { userId } = req.params;
-    
-    // Check if user exists
-    const [userCheck] = await pool.query('SELECT * FROM users WHERE id = ?', [userId]);
-    
-    if (userCheck.length === 0) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-    
-    // Don't allow deleting your own account
-    if (parseInt(userId) === req.user.id) {
-      return res.status(400).json({ message: 'You cannot delete your own account' });
-    }
-    
-    // Delete related data first (cascade should handle this if set up in the database)
-    
-    // Finally delete the user
-    await pool.query('DELETE FROM users WHERE id = ?', [userId]);
-    
-    res.json({ message: 'User deleted successfully', userId: parseInt(userId) });
-  } catch (error) {
-    console.error('Error deleting user:', error);
-    res.status(500).json({ message: 'Server error while deleting user' });
-  }
-});
-
-// ============== Announcement Routes ==============
-// Get all announcements
+// Announcement Management
 router.get('/announcements', verifyToken, isAdmin, announcementController.getAllAnnouncements);
-
-// Get announcement by ID
 router.get('/announcements/:id', verifyToken, isAdmin, announcementController.getAnnouncementById);
-
-// Create new announcement
 router.post('/announcements', verifyToken, isAdmin, announcementController.createAnnouncement);
-
-// Update announcement
 router.put('/announcements/:id', verifyToken, isAdmin, announcementController.updateAnnouncement);
-
-// Delete announcement
 router.delete('/announcements/:id', verifyToken, isAdmin, announcementController.deleteAnnouncement);
 
 // Debug route to check announcements table schema
@@ -775,5 +641,8 @@ router.patch('/notifications', verifyToken, isAdmin, async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
+
+// Admin Dashboard Stats
+router.get('/dashboard/stats', verifyToken, isAdmin, adminController.getDashboardStats);
 
 module.exports = router; 

@@ -40,6 +40,8 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 import adminService, { UserSettings as AdminSettings } from '../../services/AdminService';
+import { useTheme } from '../../contexts/ThemeContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 // Define the UserProfile interface
 interface UserProfile {
@@ -98,6 +100,8 @@ function TabPanel(props: TabPanelProps) {
 
 const Settings: React.FC = () => {
   const { authState, updateUserProfile } = useAuth();
+  const { mode, setThemeMode } = useTheme();
+  const { language, setLanguage } = useLanguage();
   const [tabValue, setTabValue] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -550,6 +554,50 @@ const Settings: React.FC = () => {
         setSaving(false);
       }
     }
+  };
+
+  // Add a function to update theme
+  const handleThemeChange = (newTheme: 'light' | 'dark') => {
+    // Update UI state
+    setProfile({
+      ...profile,
+      preferences: {
+        ...profile.preferences,
+        theme: newTheme
+      }
+    });
+    
+    // Apply theme change immediately
+    setThemeMode(newTheme);
+  };
+
+  // Add a function to update language
+  const handleLanguageChange = (newLanguage: 'English' | 'Filipino') => {
+    // Update UI state
+    setProfile({
+      ...profile,
+      preferences: {
+        ...profile.preferences,
+        language: newLanguage
+      }
+    });
+    
+    // Apply language change immediately
+    setLanguage(newLanguage);
+  };
+
+  // Add a function to update privacy settings
+  const handlePrivacyChange = (setting: 'profileVisibility' | 'showOnlineStatus' | 'showLastSeen', value: any) => {
+    setProfile({
+      ...profile,
+      preferences: {
+        ...profile.preferences,
+        privacy: {
+          ...profile.preferences.privacy,
+          [setting]: value
+        }
+      }
+    });
   };
 
   return (
@@ -1191,15 +1239,7 @@ const Settings: React.FC = () => {
                         <Button 
                           variant={profile.preferences.theme === 'dark' ? 'contained' : 'outlined'}
                           size="small"
-                          onClick={() => {
-                            setProfile({
-                              ...profile,
-                              preferences: {
-                                ...profile.preferences,
-                                theme: 'dark'
-                              }
-                            });
-                          }}
+                          onClick={() => handleThemeChange('dark')}
                           sx={{ mr: 1, minWidth: 80 }}
                         >
                           Dark
@@ -1207,15 +1247,7 @@ const Settings: React.FC = () => {
                         <Button 
                           variant={profile.preferences.theme === 'light' ? 'contained' : 'outlined'}
                           size="small"
-                          onClick={() => {
-                            setProfile({
-                              ...profile,
-                              preferences: {
-                                ...profile.preferences,
-                                theme: 'light'
-                              }
-                            });
-                          }}
+                          onClick={() => handleThemeChange('light')}
                           sx={{ minWidth: 80 }}
                         >
                           Light
@@ -1239,15 +1271,7 @@ const Settings: React.FC = () => {
                         <Button 
                           variant={profile.preferences.language === 'English' ? 'contained' : 'outlined'}
                           size="small"
-                          onClick={() => {
-                            setProfile({
-                              ...profile,
-                              preferences: {
-                                ...profile.preferences,
-                                language: 'English'
-                              }
-                            });
-                          }}
+                          onClick={() => handleLanguageChange('English')}
                           sx={{ mr: 1, minWidth: 100 }}
                         >
                           English
@@ -1255,15 +1279,7 @@ const Settings: React.FC = () => {
                         <Button 
                           variant={profile.preferences.language === 'Filipino' ? 'contained' : 'outlined'}
                           size="small"
-                          onClick={() => {
-                            setProfile({
-                              ...profile,
-                              preferences: {
-                                ...profile.preferences,
-                                language: 'Filipino'
-                              }
-                            });
-                          }}
+                          onClick={() => handleLanguageChange('Filipino')}
                           sx={{ minWidth: 100 }}
                         >
                           Filipino
@@ -1289,18 +1305,7 @@ const Settings: React.FC = () => {
                           <Button 
                             variant={profile.preferences.privacy.profileVisibility === 'public' ? 'contained' : 'outlined'}
                             size="small"
-                            onClick={() => {
-                              setProfile({
-                                ...profile,
-                                preferences: {
-                                  ...profile.preferences,
-                                  privacy: {
-                                    ...profile.preferences.privacy,
-                                    profileVisibility: 'public'
-                                  }
-                                }
-                              });
-                            }}
+                            onClick={() => handlePrivacyChange('profileVisibility', 'public')}
                             sx={{ minWidth: 80 }}
                           >
                             Public
@@ -1308,18 +1313,7 @@ const Settings: React.FC = () => {
                           <Button 
                             variant={profile.preferences.privacy.profileVisibility === 'private' ? 'contained' : 'outlined'}
                             size="small"
-                            onClick={() => {
-                              setProfile({
-                                ...profile,
-                                preferences: {
-                                  ...profile.preferences,
-                                  privacy: {
-                                    ...profile.preferences.privacy,
-                                    profileVisibility: 'private'
-                                  }
-                                }
-                              });
-                            }}
+                            onClick={() => handlePrivacyChange('profileVisibility', 'private')}
                             sx={{ minWidth: 80 }}
                           >
                             Private
@@ -1339,7 +1333,7 @@ const Settings: React.FC = () => {
                         <Switch
                           name="preferences.privacy.showOnlineStatus"
                           checked={profile.preferences.privacy.showOnlineStatus}
-                          onChange={handleProfileChange}
+                          onChange={(e) => handlePrivacyChange('showOnlineStatus', e.target.checked)}
                           edge="end"
                           color="primary"
                         />
@@ -1357,7 +1351,7 @@ const Settings: React.FC = () => {
                         <Switch
                           name="preferences.privacy.showLastSeen"
                           checked={profile.preferences.privacy.showLastSeen}
-                          onChange={handleProfileChange}
+                          onChange={(e) => handlePrivacyChange('showLastSeen', e.target.checked)}
                           edge="end"
                           color="primary"
                         />

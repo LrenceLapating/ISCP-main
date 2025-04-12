@@ -98,6 +98,9 @@ const Messages: React.FC = () => {
                 : conv
             )
           );
+          
+          // Dispatch an event that messages have been read so dashboard can update
+          window.dispatchEvent(new CustomEvent('message-read'));
         } catch (error) {
           console.error('Error fetching messages:', error);
         }
@@ -182,6 +185,9 @@ const Messages: React.FC = () => {
         
         setMessageInput('');
         setSelectedFile(null);
+        
+        // Dispatch an event to notify of new message being sent
+        window.dispatchEvent(new CustomEvent('message-received'));
       } catch (error) {
         console.error('Error sending message:', error);
       } finally {

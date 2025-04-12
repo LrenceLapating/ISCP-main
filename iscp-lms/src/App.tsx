@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { Box, CssBaseline, ThemeProvider, createTheme } from '@mui/material';
+import { Box, CssBaseline } from '@mui/material';
 import Login from './components/auth/Login';
 import Register from './components/auth/Register';
 import Dashboard from './pages/Dashboard';
@@ -30,6 +30,8 @@ import AdminMessages from './pages/admin/Messages';
 import Materials from './pages/student/Materials';
 import OfflineModePage from './pages/student/OfflineMode';
 import Students from './pages/faculty/Students';
+import { ThemeProvider } from './contexts/ThemeContext';
+import { LanguageProvider } from './contexts/LanguageContext';
 
 // Mock component for student assignments only
 const MockAssignments = () => <div>Assignments Component (Mock)</div>;
@@ -74,227 +76,204 @@ const AuthRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#1976d2',
-    },
-    secondary: {
-      main: '#dc004e',
-    },
-    error: {
-      main: '#f44336',
-    },
-    background: {
-      default: '#f5f5f5',
-    },
-  },
-  typography: {
-    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
-    fontSize: 14,
-    fontWeightLight: 300,
-    fontWeightRegular: 400,
-    fontWeightMedium: 500,
-    fontWeightBold: 700,
-  },
-});
-
 function App() {
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <Box sx={{ 
-        display: 'flex', 
-        minHeight: '100vh',
-        width: '100%',
-        overflow: 'hidden'
-      }}>
-        <AuthProvider>
-          <Router>
-            <Routes>
-              <Route path="/login" element={
-                <AuthRoute>
-                  <Login />
-                </AuthRoute>
-              } />
-              <Route path="/register" element={
-                <AuthRoute>
-                  <Register />
-                </AuthRoute>
-              } />
-              
-              {/* Student Routes */}
-              <Route path="/dashboard" element={
-                <ProtectedRoute allowedRoles={['student']}>
-                  <Dashboard />
-                </ProtectedRoute>
-              } />
-              <Route path="/courses" element={
-                <ProtectedRoute allowedRoles={['student']}>
-                  <Courses />
-                </ProtectedRoute>
-              } />
-              <Route path="/assignments" element={
-                <ProtectedRoute allowedRoles={['student']}>
-                  <Assignments />
-                </ProtectedRoute>
-              } />
-              <Route path="/grades" element={
-                <ProtectedRoute allowedRoles={['student']}>
-                  <Grades />
-                </ProtectedRoute>
-              } />
-              <Route path="/messages" element={
-                <ProtectedRoute allowedRoles={['student']}>
-                  <Messages />
-                </ProtectedRoute>
-              } />
-              <Route path="/settings" element={
-                <ProtectedRoute allowedRoles={['student']}>
-                  <Settings />
-                </ProtectedRoute>
-              } />
-              <Route path="/materials" element={
-                <ProtectedRoute allowedRoles={['student']}>
-                  <Materials />
-                </ProtectedRoute>
-              } />
-              <Route path="/offline-mode" element={
-                <ProtectedRoute allowedRoles={['student']}>
-                  <OfflineModePage />
-                </ProtectedRoute>
-              } />
-              
-              {/* Faculty Routes */}
-              <Route 
-                path="/faculty/dashboard" 
-                element={
-                  <ProtectedRoute allowedRoles={['faculty', 'teacher']}>
-                    <FacultyDashboard />
+    <ThemeProvider>
+      <LanguageProvider>
+        <CssBaseline />
+        <Box sx={{ 
+          display: 'flex', 
+          minHeight: '100vh',
+          width: '100%',
+          overflow: 'hidden'
+        }}>
+          <AuthProvider>
+            <Router>
+              <Routes>
+                <Route path="/login" element={
+                  <AuthRoute>
+                    <Login />
+                  </AuthRoute>
+                } />
+                <Route path="/register" element={
+                  <AuthRoute>
+                    <Register />
+                  </AuthRoute>
+                } />
+                
+                {/* Student Routes */}
+                <Route path="/dashboard" element={
+                  <ProtectedRoute allowedRoles={['student']}>
+                    <Dashboard />
                   </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/faculty/courses" 
-                element={
-                  <ProtectedRoute allowedRoles={['faculty', 'teacher']}>
-                    <FacultyCourses />
+                } />
+                <Route path="/courses" element={
+                  <ProtectedRoute allowedRoles={['student']}>
+                    <Courses />
                   </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/faculty/students" 
-                element={
-                  <ProtectedRoute allowedRoles={['faculty', 'teacher']}>
-                    <Students />
+                } />
+                <Route path="/assignments" element={
+                  <ProtectedRoute allowedRoles={['student']}>
+                    <Assignments />
                   </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/faculty/messages" 
-                element={
-                  <ProtectedRoute allowedRoles={['faculty', 'teacher']}>
-                    <FacultyMessages />
+                } />
+                <Route path="/grades" element={
+                  <ProtectedRoute allowedRoles={['student']}>
+                    <Grades />
                   </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/faculty/assignments" 
-                element={
-                  <ProtectedRoute allowedRoles={['faculty', 'teacher']}>
-                    <FacultyAssignments />
+                } />
+                <Route path="/messages" element={
+                  <ProtectedRoute allowedRoles={['student']}>
+                    <Messages />
                   </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/faculty/assignments/:assignmentId/submissions" 
-                element={
-                  <ProtectedRoute allowedRoles={['faculty', 'teacher']}>
-                    <AssignmentSubmissions />
+                } />
+                <Route path="/settings" element={
+                  <ProtectedRoute allowedRoles={['student']}>
+                    <Settings />
                   </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/faculty/materials" 
-                element={
-                  <ProtectedRoute allowedRoles={['faculty', 'teacher']}>
-                    <FacultyMaterials />
+                } />
+                <Route path="/materials" element={
+                  <ProtectedRoute allowedRoles={['student']}>
+                    <Materials />
                   </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/faculty/discussions" 
-                element={
-                  <ProtectedRoute allowedRoles={['faculty', 'teacher']}>
+                } />
+                <Route path="/offline-mode" element={
+                  <ProtectedRoute allowedRoles={['student']}>
+                    <OfflineModePage />
+                  </ProtectedRoute>
+                } />
+                
+                {/* Faculty Routes */}
+                <Route 
+                  path="/faculty/dashboard" 
+                  element={
+                    <ProtectedRoute allowedRoles={['faculty', 'teacher']}>
+                      <FacultyDashboard />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/faculty/courses" 
+                  element={
+                    <ProtectedRoute allowedRoles={['faculty', 'teacher']}>
+                      <FacultyCourses />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/faculty/students" 
+                  element={
+                    <ProtectedRoute allowedRoles={['faculty', 'teacher']}>
+                      <Students />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/faculty/messages" 
+                  element={
+                    <ProtectedRoute allowedRoles={['faculty', 'teacher']}>
+                      <FacultyMessages />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/faculty/assignments" 
+                  element={
+                    <ProtectedRoute allowedRoles={['faculty', 'teacher']}>
+                      <FacultyAssignments />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/faculty/assignments/:assignmentId/submissions" 
+                  element={
+                    <ProtectedRoute allowedRoles={['faculty', 'teacher']}>
+                      <AssignmentSubmissions />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/faculty/materials" 
+                  element={
+                    <ProtectedRoute allowedRoles={['faculty', 'teacher']}>
+                      <FacultyMaterials />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/faculty/discussions" 
+                  element={
+                    <ProtectedRoute allowedRoles={['faculty', 'teacher']}>
+                      <FacultyDiscussions />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route path="/faculty/discussions/:discussionId" element={
+                  <ProtectedRoute allowedRoles={['teacher']}>
                     <FacultyDiscussions />
                   </ProtectedRoute>
-                } 
-              />
-              <Route path="/faculty/discussions/:discussionId" element={
-                <ProtectedRoute allowedRoles={['teacher']}>
-                  <FacultyDiscussions />
-                </ProtectedRoute>
-              } />
-              <Route path="/faculty/discussions/create" element={
-                <ProtectedRoute allowedRoles={['teacher']}>
-                  <FacultyDiscussions />
-                </ProtectedRoute>
-              } />
-              <Route path="/faculty/settings" element={
-                <ProtectedRoute allowedRoles={['teacher']}>
-                  <FacultySettings />
-                </ProtectedRoute>
-              } />
-              
-              {/* Admin Routes */}
-              <Route path="/admin/dashboard" element={
-                <ProtectedRoute allowedRoles={['admin']}>
-                  <AdminDashboard />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/users" element={
-                <ProtectedRoute allowedRoles={['admin']}>
-                  <UserManagement />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/courses" element={
-                <ProtectedRoute allowedRoles={['admin']}>
-                  <CourseManagement />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/messages" element={
-                <ProtectedRoute allowedRoles={['admin']}>
-                  <AdminMessages />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/announcements" element={
-                <ProtectedRoute allowedRoles={['admin']}>
-                  <AnnouncementManagement />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/archives" element={
-                <ProtectedRoute allowedRoles={['admin']}>
-                  <AcademicArchives />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/system" element={
-                <ProtectedRoute allowedRoles={['admin']}>
-                  <SystemManagement />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/settings" element={
-                <ProtectedRoute allowedRoles={['admin']}>
-                  <AdminSettings />
-                </ProtectedRoute>
-              } />
-              
-              {/* Default redirect */}
-              <Route path="/" element={<Navigate to="/login" />} />
-              <Route path="*" element={<Navigate to="/login" />} />
-            </Routes>
-          </Router>
-        </AuthProvider>
-      </Box>
+                } />
+                <Route path="/faculty/discussions/create" element={
+                  <ProtectedRoute allowedRoles={['teacher']}>
+                    <FacultyDiscussions />
+                  </ProtectedRoute>
+                } />
+                <Route path="/faculty/settings" element={
+                  <ProtectedRoute allowedRoles={['teacher']}>
+                    <FacultySettings />
+                  </ProtectedRoute>
+                } />
+                
+                {/* Admin Routes */}
+                <Route path="/admin/dashboard" element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <AdminDashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/users" element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <UserManagement />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/courses" element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <CourseManagement />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/messages" element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <AdminMessages />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/announcements" element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <AnnouncementManagement />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/archives" element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <AcademicArchives />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/system" element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <SystemManagement />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/settings" element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <AdminSettings />
+                  </ProtectedRoute>
+                } />
+                
+                {/* Default redirect */}
+                <Route path="/" element={<Navigate to="/login" />} />
+                <Route path="*" element={<Navigate to="/login" />} />
+              </Routes>
+            </Router>
+          </AuthProvider>
+        </Box>
+      </LanguageProvider>
     </ThemeProvider>
   );
 }

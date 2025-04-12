@@ -188,10 +188,19 @@ const UserManagement: React.FC = () => {
           status: currentUser.status || 'active'
         });
         
-        // Update the UI
+        console.log('Updated user received from server:', updatedUser);
+        
+        // Update the UI with the actual data returned from the server
         setUsers(prevUsers =>
           prevUsers.map(user =>
-            user.id === currentUser.id ? { ...user, ...currentUser as User } : user
+            user.id === currentUser.id ? { 
+              ...user, 
+              name: updatedUser.fullName || currentUser.name,
+              email: updatedUser.email || currentUser.email,
+              role: updatedUser.role || currentUser.role,
+              campus: updatedUser.campus || currentUser.campus,
+              status: updatedUser.status || currentUser.status
+            } : user
           )
         );
         

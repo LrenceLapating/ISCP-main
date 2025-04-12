@@ -41,6 +41,8 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 import facultyService from '../../services/FacultyService';
+import { useTheme } from '../../contexts/ThemeContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 // Define the UserProfile interface
 interface UserProfile {
@@ -99,6 +101,8 @@ function TabPanel(props: TabPanelProps) {
 
 const Settings: React.FC = () => {
   const { authState, updateUserProfile } = useAuth();
+  const { mode, setThemeMode } = useTheme();
+  const { language, setLanguage, t } = useLanguage();
   const [tabValue, setTabValue] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -552,17 +556,63 @@ const Settings: React.FC = () => {
     }
   };
 
+  // Add a function to update theme
+  const handleThemeChange = (newTheme: 'light' | 'dark') => {
+    // Update UI state
+    setProfile({
+      ...profile,
+      preferences: {
+        ...profile.preferences,
+        theme: newTheme
+      }
+    });
+    
+    // Apply theme change immediately
+    setThemeMode(newTheme);
+  };
+
+  // Add a function to update language
+  const handleLanguageChange = (newLanguage: 'English' | 'Filipino') => {
+    // Update UI state
+    setProfile({
+      ...profile,
+      preferences: {
+        ...profile.preferences,
+        language: newLanguage
+      }
+    });
+    
+    // Apply language change immediately
+    setLanguage(newLanguage);
+  };
+
+  // Add a function to update privacy settings
+  const handlePrivacyChange = (setting: 'profileVisibility' | 'showOnlineStatus' | 'showLastSeen', value: any) => {
+    setProfile({
+      ...profile,
+      preferences: {
+        ...profile.preferences,
+        privacy: {
+          ...profile.preferences.privacy,
+          [setting]: value
+        }
+      }
+    });
+  };
+
   return (
-    <FacultyLayout title="Settings">
+    <FacultyLayout title={t('settings')}>
       <Box sx={{ py: 4, px: { xs: 2, sm: 3, md: 4 }, bgcolor: '#0a1128', width: '100%' }}>
         <Container maxWidth="xl">
           {/* Header */}
           <Box sx={{ mb: 4 }}>
             <Typography variant="h4" component="h1" sx={{ fontWeight: 700, mb: 1, color: '#fff' }}>
-              Settings
+              {t('settings')}
             </Typography>
             <Typography variant="subtitle1" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-              Manage your account settings and preferences
+              {language === 'English' ? 
+                'Manage your account settings and preferences' : 
+                'Pamahalaan ang iyong mga setting at kagustuhan ng account'}
             </Typography>
           </Box>
 
@@ -688,10 +738,10 @@ const Settings: React.FC = () => {
                       }
                     }}
                   >
-                    <Tab icon={<Person sx={{ fontSize: 20 }} />} iconPosition="start" label="Profile" />
-                    <Tab icon={<Security sx={{ fontSize: 20 }} />} iconPosition="start" label="Password & Security" />
-                    <Tab icon={<Notifications sx={{ fontSize: 20 }} />} iconPosition="start" label="Notifications" />
-                    <Tab icon={<ColorLens sx={{ fontSize: 20 }} />} iconPosition="start" label="Appearance" />
+                    <Tab icon={<Person sx={{ fontSize: 20 }} />} iconPosition="start" label={language === 'English' ? 'Profile' : 'Profile'} />
+                    <Tab icon={<Security sx={{ fontSize: 20 }} />} iconPosition="start" label={language === 'English' ? 'Password & Security' : 'Password at Seguridad'} />
+                    <Tab icon={<Notifications sx={{ fontSize: 20 }} />} iconPosition="start" label={language === 'English' ? 'Notifications' : 'Mga Notipikasyon'} />
+                    <Tab icon={<ColorLens sx={{ fontSize: 20 }} />} iconPosition="start" label={language === 'English' ? 'Appearance' : 'Hitsura'} />
                   </Tabs>
                 </Box>
 
@@ -699,7 +749,7 @@ const Settings: React.FC = () => {
                 <TabPanel value={tabValue} index={0}>
                   <Box sx={{ p: { xs: 2, sm: 3 } }}>
                     <Typography variant="h6" gutterBottom sx={{ color: '#fff', fontWeight: 600 }}>
-                      Personal Information
+                      {language === 'English' ? 'Personal Information' : 'Personal na Impormasyon'}
                     </Typography>
                     
                     <Grid container spacing={3}>
@@ -892,7 +942,10 @@ const Settings: React.FC = () => {
                         disabled={saving}
                         sx={{ borderRadius: 2, px: 3 }}
                       >
-                        {saving ? 'Saving...' : 'Save Changes'}
+                        {saving ? 
+                          (language === 'English' ? 'Saving...' : 'Nag-sasave...') : 
+                          (language === 'English' ? 'Save Changes' : 'I-save ang mga Pagbabago')
+                        }
                       </Button>
                     </Box>
                   </Box>
@@ -902,7 +955,7 @@ const Settings: React.FC = () => {
                 <TabPanel value={tabValue} index={1}>
                   <Box sx={{ p: { xs: 2, sm: 3 } }}>
                     <Typography variant="h6" gutterBottom sx={{ color: '#fff', fontWeight: 600 }}>
-                      Change Password
+                      {language === 'English' ? 'Change Password' : 'Palitan ang Password'}
                     </Typography>
                     
                     <Grid container spacing={3}>
@@ -1031,7 +1084,10 @@ const Settings: React.FC = () => {
                           passwordForm.newPassword !== passwordForm.confirmPassword}
                         sx={{ borderRadius: 2, px: 3 }}
                       >
-                        {saving ? 'Saving...' : 'Update Password'}
+                        {saving ? 
+                          (language === 'English' ? 'Saving...' : 'Nag-sasave...') : 
+                          (language === 'English' ? 'Update Password' : 'I-update ang Password')
+                        }
                       </Button>
                     </Box>
                   </Box>
@@ -1041,7 +1097,7 @@ const Settings: React.FC = () => {
                 <TabPanel value={tabValue} index={2}>
                   <Box sx={{ p: { xs: 2, sm: 3 } }}>
                     <Typography variant="h6" gutterBottom sx={{ color: '#fff', fontWeight: 600 }}>
-                      Notification Preferences
+                      {language === 'English' ? 'Notification Preferences' : 'Mga Kagustuhan sa Notipikasyon'}
                     </Typography>
                     
                     <List sx={{ width: '100%' }}>
@@ -1156,7 +1212,10 @@ const Settings: React.FC = () => {
                         disabled={saving}
                         sx={{ borderRadius: 2, px: 3 }}
                       >
-                        {saving ? 'Saving...' : 'Save Preferences'}
+                        {saving ? 
+                          (language === 'English' ? 'Saving...' : 'Nag-sasave...') : 
+                          (language === 'English' ? 'Save Preferences' : 'I-save ang mga Kagustuhan')
+                        }
                       </Button>
                     </Box>
                   </Box>
@@ -1166,7 +1225,7 @@ const Settings: React.FC = () => {
                 <TabPanel value={tabValue} index={3}>
                   <Box sx={{ p: { xs: 2, sm: 3 } }}>
                     <Typography variant="h6" gutterBottom sx={{ color: '#fff', fontWeight: 600 }}>
-                      Appearance Settings
+                      {t('appearanceSettings')}
                     </Typography>
                     
                     <List sx={{ width: '100%' }}>
@@ -1175,8 +1234,8 @@ const Settings: React.FC = () => {
                           <DarkMode sx={{ color: 'rgba(255, 255, 255, 0.7)' }} />
                         </ListItemIcon>
                         <ListItemText 
-                          primary="Theme" 
-                          secondary="Choose between light and dark mode"
+                          primary={t('theme')}
+                          secondary={t('themeDescription')}
                           primaryTypographyProps={{ color: '#fff' }}
                           secondaryTypographyProps={{ color: 'rgba(255, 255, 255, 0.7)' }}
                         />
@@ -1184,34 +1243,18 @@ const Settings: React.FC = () => {
                           <Button 
                             variant={profile.preferences.theme === 'dark' ? 'contained' : 'outlined'}
                             size="small"
-                            onClick={() => {
-                              setProfile({
-                                ...profile,
-                                preferences: {
-                                  ...profile.preferences,
-                                  theme: 'dark'
-                                }
-                              });
-                            }}
+                            onClick={() => handleThemeChange('dark')}
                             sx={{ mr: 1, minWidth: 80 }}
                           >
-                            Dark
+                            {t('dark')}
                           </Button>
                           <Button 
                             variant={profile.preferences.theme === 'light' ? 'contained' : 'outlined'}
                             size="small"
-                            onClick={() => {
-                              setProfile({
-                                ...profile,
-                                preferences: {
-                                  ...profile.preferences,
-                                  theme: 'light'
-                                }
-                              });
-                            }}
+                            onClick={() => handleThemeChange('light')}
                             sx={{ minWidth: 80 }}
                           >
-                            Light
+                            {t('light')}
                           </Button>
                         </ListItemSecondaryAction>
                       </ListItem>
@@ -1223,8 +1266,8 @@ const Settings: React.FC = () => {
                           <Language sx={{ color: 'rgba(255, 255, 255, 0.7)' }} />
                         </ListItemIcon>
                         <ListItemText 
-                          primary="Language" 
-                          secondary="Select your preferred language"
+                          primary={t('language')}
+                          secondary={t('languageDescription')}
                           primaryTypographyProps={{ color: '#fff' }}
                           secondaryTypographyProps={{ color: 'rgba(255, 255, 255, 0.7)' }}
                         />
@@ -1232,15 +1275,7 @@ const Settings: React.FC = () => {
                           <Button 
                             variant={profile.preferences.language === 'English' ? 'contained' : 'outlined'}
                             size="small"
-                            onClick={() => {
-                              setProfile({
-                                ...profile,
-                                preferences: {
-                                  ...profile.preferences,
-                                  language: 'English'
-                                }
-                              });
-                            }}
+                            onClick={() => handleLanguageChange('English')}
                             sx={{ mr: 1, minWidth: 100 }}
                           >
                             English
@@ -1248,15 +1283,7 @@ const Settings: React.FC = () => {
                           <Button 
                             variant={profile.preferences.language === 'Filipino' ? 'contained' : 'outlined'}
                             size="small"
-                            onClick={() => {
-                              setProfile({
-                                ...profile,
-                                preferences: {
-                                  ...profile.preferences,
-                                  language: 'Filipino'
-                                }
-                              });
-                            }}
+                            onClick={() => handleLanguageChange('Filipino')}
                             sx={{ minWidth: 100 }}
                           >
                             Filipino
@@ -1267,13 +1294,13 @@ const Settings: React.FC = () => {
                       <Divider sx={{ my: 2, bgcolor: 'rgba(255, 255, 255, 0.1)' }} />
                       
                       <Typography variant="subtitle2" gutterBottom sx={{ color: '#fff', fontWeight: 600, px: 2 }}>
-                        Privacy Settings
+                        {t('privacySettings')}
                       </Typography>
                       
                       <ListItem>
                         <ListItemText 
-                          primary="Profile Visibility" 
-                          secondary="Control who can see your profile information"
+                          primary={t('profileVisibility')}
+                          secondary={t('profileVisibilityDescription')}
                           primaryTypographyProps={{ color: '#fff' }}
                           secondaryTypographyProps={{ color: 'rgba(255, 255, 255, 0.7)' }}
                         />
@@ -1282,40 +1309,18 @@ const Settings: React.FC = () => {
                             <Button 
                               variant={profile.preferences.privacy.profileVisibility === 'public' ? 'contained' : 'outlined'}
                               size="small"
-                              onClick={() => {
-                                setProfile({
-                                  ...profile,
-                                  preferences: {
-                                    ...profile.preferences,
-                                    privacy: {
-                                      ...profile.preferences.privacy,
-                                      profileVisibility: 'public'
-                                    }
-                                  }
-                                });
-                              }}
+                              onClick={() => handlePrivacyChange('profileVisibility', 'public')}
                               sx={{ minWidth: 80 }}
                             >
-                              Public
+                              {t('public')}
                             </Button>
                             <Button 
                               variant={profile.preferences.privacy.profileVisibility === 'private' ? 'contained' : 'outlined'}
                               size="small"
-                              onClick={() => {
-                                setProfile({
-                                  ...profile,
-                                  preferences: {
-                                    ...profile.preferences,
-                                    privacy: {
-                                      ...profile.preferences.privacy,
-                                      profileVisibility: 'private'
-                                    }
-                                  }
-                                });
-                              }}
+                              onClick={() => handlePrivacyChange('profileVisibility', 'private')}
                               sx={{ minWidth: 80 }}
                             >
-                              Private
+                              {t('private')}
                             </Button>
                           </Box>
                         </ListItemSecondaryAction>
@@ -1323,8 +1328,8 @@ const Settings: React.FC = () => {
                       
                       <ListItem>
                         <ListItemText 
-                          primary="Show Online Status" 
-                          secondary="Let others see when you're online"
+                          primary={t('onlineStatus')}
+                          secondary={t('onlineStatusDescription')}
                           primaryTypographyProps={{ color: '#fff' }}
                           secondaryTypographyProps={{ color: 'rgba(255, 255, 255, 0.7)' }}
                         />
@@ -1332,7 +1337,7 @@ const Settings: React.FC = () => {
                           <Switch
                             name="preferences.privacy.showOnlineStatus"
                             checked={profile.preferences.privacy.showOnlineStatus}
-                            onChange={handleProfileChange}
+                            onChange={(e) => handlePrivacyChange('showOnlineStatus', e.target.checked)}
                             edge="end"
                             color="primary"
                           />
@@ -1341,8 +1346,8 @@ const Settings: React.FC = () => {
                       
                       <ListItem>
                         <ListItemText 
-                          primary="Show Last Seen" 
-                          secondary="Let others see when you were last active"
+                          primary={t('lastSeen')}
+                          secondary={t('lastSeenDescription')}
                           primaryTypographyProps={{ color: '#fff' }}
                           secondaryTypographyProps={{ color: 'rgba(255, 255, 255, 0.7)' }}
                         />
@@ -1350,7 +1355,7 @@ const Settings: React.FC = () => {
                           <Switch
                             name="preferences.privacy.showLastSeen"
                             checked={profile.preferences.privacy.showLastSeen}
-                            onChange={handleProfileChange}
+                            onChange={(e) => handlePrivacyChange('showLastSeen', e.target.checked)}
                             edge="end"
                             color="primary"
                           />
@@ -1366,7 +1371,7 @@ const Settings: React.FC = () => {
                         disabled={saving}
                         sx={{ borderRadius: 2, px: 3 }}
                       >
-                        {saving ? 'Saving...' : 'Save Settings'}
+                        {saving ? t('saving') : t('save')}
                       </Button>
                     </Box>
                   </Box>
@@ -1386,10 +1391,12 @@ const Settings: React.FC = () => {
                   }}
                 >
                   <Typography variant="h6" sx={{ color: '#ff3d3d', mb: 1 }}>
-                    Danger Zone
+                    {language === 'English' ? 'Danger Zone' : 'Mapanganib na Zone'}
                   </Typography>
                   <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)', mb: 2 }}>
-                    These actions are permanent and cannot be undone. Please proceed with caution.
+                    {language === 'English' ? 
+                      'These actions are permanent and cannot be undone. Please proceed with caution.' : 
+                      'Ang mga aksyong ito ay permanente at hindi maaaring ibalik. Mangyaring mag-ingat.'}
                   </Typography>
                   <Button 
                     variant="outlined" 
@@ -1403,7 +1410,7 @@ const Settings: React.FC = () => {
                       }
                     }}
                   >
-                    Delete Account
+                    {language === 'English' ? 'Delete Account' : 'Burahin ang Account'}
                   </Button>
                 </Paper>
               </Box>

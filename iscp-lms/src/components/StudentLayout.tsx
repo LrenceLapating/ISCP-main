@@ -33,6 +33,7 @@ import {
 } from '@mui/icons-material';
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import studentService from '../services/StudentService';
 import NotificationDropdown from './common/NotificationDropdown';
 
@@ -49,6 +50,7 @@ const StudentLayout: React.FC<StudentLayoutProps> = ({ children, title }) => {
   const theme = useTheme();
   const location = useLocation();
   const navigate = useNavigate();
+  const { language, t } = useLanguage();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [mobileOpen, setMobileOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(user);
@@ -137,43 +139,43 @@ const StudentLayout: React.FC<StudentLayoutProps> = ({ children, title }) => {
   const navigationItems = [
     { 
       path: '/dashboard', 
-      text: 'Dashboard', 
+      text: t('dashboard'), 
       icon: <DashboardIcon />, 
       active: location.pathname === '/dashboard' 
     },
     { 
       path: '/courses', 
-      text: 'My Courses', 
+      text: language === 'English' ? 'My Courses' : 'Mga Kurso Ko', 
       icon: <LibraryBooks />, 
       active: location.pathname.includes('/courses') 
     },
     { 
       path: '/assignments', 
-      text: 'Assignments', 
+      text: t('assignments'), 
       icon: <Assignment />, 
       active: location.pathname.includes('/assignments') 
     },
     { 
       path: '/materials', 
-      text: 'Materials', 
+      text: t('materials'), 
       icon: <Book />, 
       active: location.pathname.includes('/materials') 
     },
     { 
       path: '/grades', 
-      text: 'Grades', 
+      text: t('grades'), 
       icon: <Grade />, 
       active: location.pathname.includes('/grades') 
     },
     { 
       path: '/messages', 
-      text: 'Messages', 
+      text: t('messages'), 
       icon: <Email />, 
       active: location.pathname.includes('/messages') 
     },
     { 
       path: '/settings', 
-      text: 'Settings', 
+      text: t('settings'), 
       icon: <Settings />, 
       active: location.pathname.includes('/settings') 
     }
@@ -189,7 +191,7 @@ const StudentLayout: React.FC<StudentLayoutProps> = ({ children, title }) => {
       }}>
         <School sx={{ mr: 1.5, fontSize: 28 }} />
         <Typography variant="h6" component="div" sx={{ fontWeight: 'bold' }}>
-          ISCP Student
+          {language === 'English' ? 'ISCP Student' : 'ISCP Estudyante'}
         </Typography>
       </Box>
       <List sx={{ flexGrow: 1 }}>
@@ -247,8 +249,10 @@ const StudentLayout: React.FC<StudentLayoutProps> = ({ children, title }) => {
             <Logout />
           </ListItemIcon>
           <ListItemText 
-            primary="Logout" 
-            primaryTypographyProps={{ fontSize: '0.9rem' }} 
+            primary={t('logout')}
+            primaryTypographyProps={{ 
+              fontSize: '0.9rem'
+            }}
           />
         </ListItem>
       </Box>

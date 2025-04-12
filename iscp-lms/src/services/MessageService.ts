@@ -193,6 +193,88 @@ class MessageService {
       return null;
     }
   }
+  
+  // Check total unread message count for notification
+  async getUnreadCount(): Promise<number> {
+    try {
+      const response = await axios.get(
+        `${this.apiUrl}/api/messages/unread-count`,
+        { headers: this.getAuthHeader() }
+      );
+      
+      return response.data.count;
+    } catch (error) {
+      console.error('Error fetching unread message count:', error);
+      
+      // Fallback: compute from locally cached conversations
+      try {
+        const conversations = await this.getConversations();
+        return conversations.reduce((count, conv) => count + conv.unreadCount, 0);
+      } catch {
+        return 0;
+      }
+    }
+  }
+  
+  // Start background polling for new messages
+  startBackgroundPolling(intervalMs = 30000): (() => void) {
+    // First check immediately
+    this.checkForNewMessages();
+    
+    // Then set up interval
+    const intervalId = setInterval(() => {
+      this.checkForNewMessages();
+    }, intervalMs);
+    
+    // Return cleanup function
+    return () => {
+      clearInterval(intervalId);
+    };
+  }
+  
+  // Check for new messages and dispatch an event if found
+  private async checkForNewMessages(): Promise<void> {
+    try {
+      const unreadCount = await this.getUnreadCount();
+      
+      if (unreadCount > 0) {
+        // Dispatch event for components to update
+        window.dispatchEvent(new CustomEvent('message-received'));
+      }
+    } catch (error) {
+      console.error('Error checking for new messages:', error);
+    }
+  }
 }
 
-export default new MessageService(); 
+// Initialize message service and start background polling
+const messageService = new MessageService();
+
+// Start background polling when app loads
+let stopPolling: (() => void) | null = null;
+
+// Set up polling when user is logged in
+const setupMessagePolling = () => {
+  const token = localStorage.getItem('token');
+  
+  // If token exists, start polling
+  if (token && !stopPolling) {
+    stopPolling = messageService.startBackgroundPolling();
+  } else if (!token && stopPolling) {
+    // If token is removed (logged out), stop polling
+    stopPolling();
+    stopPolling = null;
+  }
+};
+
+// Setup polling initially
+setupMessagePolling();
+
+// Listen for login/logout events
+window.addEventListener('storage', (event) => {
+  if (event.key === 'token') {
+    setupMessagePolling();
+  }
+});
+
+export default messageService; 

@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import axios from 'axios';
+import messageService from './MessageService';
 
 // Types
 export interface Course {
@@ -843,8 +844,64 @@ class StudentService {
   }
   
   // Messages
-  public getContacts(): Contact[] {
+  public async getContacts(): Promise<Contact[]> {
+    try {
+      this.ensureAuthHeaders();
+      
+      // Try to get contacts from API first
+      const response = await axios.get(`${this.apiUrl}/api/user/conversations`);
+      
+      if (response.data && Array.isArray(response.data)) {
+        // Process the API response to match our Contact interface
+        const contacts: Contact[] = response.data.map((conv: any) => {
+          const otherParticipant = conv.otherParticipant || {};
+          
+          return {
+            id: conv.id,
+            name: otherParticipant.fullName || conv.title || 'Unknown',
+            avatar: otherParticipant.profileImage || '',
+            role: otherParticipant.role || 'student',
+            course: 'General',
+            lastMessage: conv.lastMessage?.content || 'No messages yet',
+            timestamp: conv.lastMessage?.created_at 
+              ? new Date(conv.lastMessage.created_at).toLocaleString() 
+              : 'Never',
+            unread: conv.unreadCount || 0,
+            online: otherParticipant.status === 'online'
+          };
+        });
+        
+        // Cache the contacts
+        localStorage.setItem(this.STORAGE_KEYS.CONTACTS, JSON.stringify(contacts));
+        return contacts;
+      }
+      
+      // Fallback to local storage
+      return JSON.parse(localStorage.getItem(this.STORAGE_KEYS.CONTACTS) || '[]');
+    } catch (error) {
+      console.error('Error fetching contacts:', error);
+      // Fallback to local storage
+      return JSON.parse(localStorage.getItem(this.STORAGE_KEYS.CONTACTS) || '[]');
+    }
+  }
+
+  // Synchronous version for quick dashboard load
+  public getContactsSync(): Contact[] {
     return JSON.parse(localStorage.getItem(this.STORAGE_KEYS.CONTACTS) || '[]');
+  }
+
+  // Get unread message count
+  public async getUnreadMessageCount(): Promise<number> {
+    try {
+      // Use the MessageService for a more accurate count
+      return await messageService.getUnreadCount();
+    } catch (error) {
+      console.error('Error getting unread message count:', error);
+      
+      // Fallback to local calculation
+      const contacts = await this.getContacts();
+      return contacts.reduce((total, contact) => total + contact.unread, 0);
+    }
   }
   
   public getConversation(contactId: number): Message[] {
@@ -852,80 +909,155 @@ class StudentService {
     return conversations[contactId] || [];
   }
   
-  public sendMessage(contactId: number, content: string): boolean {
-    const conversations = JSON.parse(localStorage.getItem(this.STORAGE_KEYS.CONVERSATIONS) || '{}');
-    const contactConversation = conversations[contactId] || [];
-    
-    const newMessage: Message = {
-      id: Date.now(),
-      sender: 0, // current user
-      content,
-      timestamp: new Date().toLocaleString(),
-      read: true
-    };
-    
-    const updatedConversation = [...contactConversation, newMessage];
-    const updatedConversations = {
-      ...conversations,
-      [contactId]: updatedConversation
-    };
-    
-    localStorage.setItem(this.STORAGE_KEYS.CONVERSATIONS, JSON.stringify(updatedConversations));
-    
-    // Update contact's last message
-    const contacts = this.getContacts();
-    const contactIndex = contacts.findIndex((c: Contact) => c.id === contactId);
-    
-    if (contactIndex !== -1) {
-      const updatedContacts = [...contacts];
-      updatedContacts[contactIndex] = {
-        ...updatedContacts[contactIndex],
-        lastMessage: content,
-        timestamp: 'Just now'
+  public async sendMessage(contactId: number, content: string): Promise<boolean> {
+    try {
+      this.ensureAuthHeaders();
+      
+      // Try to send message via API
+      const response = await axios.post(
+        `${this.apiUrl}/api/conversations/${contactId}/messages`,
+        { content }
+      );
+      
+      if (response.status === 201) {
+        // Update contacts cache with new message
+        const contacts = await this.getContacts();
+        
+        // Update local storage for offline access
+        const conversations = JSON.parse(localStorage.getItem(this.STORAGE_KEYS.CONVERSATIONS) || '{}');
+        const contactConversation = conversations[contactId] || [];
+        
+        const newMessage: Message = {
+          id: Date.now(),
+          sender: 0, // current user
+          content,
+          timestamp: new Date().toLocaleString(),
+          read: true
+        };
+        
+        const updatedConversation = [...contactConversation, newMessage];
+        const updatedConversations = {
+          ...conversations,
+          [contactId]: updatedConversation
+        };
+        
+        localStorage.setItem(this.STORAGE_KEYS.CONVERSATIONS, JSON.stringify(updatedConversations));
+        
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('Error sending message:', error);
+      
+      // Fallback to local storage only
+      const conversations = JSON.parse(localStorage.getItem(this.STORAGE_KEYS.CONVERSATIONS) || '{}');
+      const contactConversation = conversations[contactId] || [];
+      
+      const newMessage: Message = {
+        id: Date.now(),
+        sender: 0, // current user
+        content,
+        timestamp: new Date().toLocaleString(),
+        read: true
       };
       
-      localStorage.setItem(this.STORAGE_KEYS.CONTACTS, JSON.stringify(updatedContacts));
+      const updatedConversation = [...contactConversation, newMessage];
+      const updatedConversations = {
+        ...conversations,
+        [contactId]: updatedConversation
+      };
+      
+      localStorage.setItem(this.STORAGE_KEYS.CONVERSATIONS, JSON.stringify(updatedConversations));
+      
+      // Update contact's last message in local storage
+      const contacts = this.getContactsSync();
+      const contactIndex = contacts.findIndex((c: Contact) => c.id === contactId);
+      
+      if (contactIndex !== -1) {
+        const updatedContacts = [...contacts];
+        updatedContacts[contactIndex] = {
+          ...updatedContacts[contactIndex],
+          lastMessage: content,
+          timestamp: 'Just now'
+        };
+        
+        localStorage.setItem(this.STORAGE_KEYS.CONTACTS, JSON.stringify(updatedContacts));
+      }
+      
+      return true;
     }
-    
-    return true;
   }
   
-  public markMessageAsRead(contactId: number, messageId: number): boolean {
-    const conversations = JSON.parse(localStorage.getItem(this.STORAGE_KEYS.CONVERSATIONS) || '{}');
-    const contactConversation = conversations[contactId] || [];
-    
-    const messageIndex = contactConversation.findIndex((m: Message) => m.id === messageId);
-    if (messageIndex === -1) return false;
-    
-    const updatedConversation = [...contactConversation];
-    updatedConversation[messageIndex] = {
-      ...updatedConversation[messageIndex],
-      read: true
-    };
-    
-    const updatedConversations = {
-      ...conversations,
-      [contactId]: updatedConversation
-    };
-    
-    localStorage.setItem(this.STORAGE_KEYS.CONVERSATIONS, JSON.stringify(updatedConversations));
-    
-    // Update unread count in contacts
-    const contacts = this.getContacts();
-    const contactIndex = contacts.findIndex((c: Contact) => c.id === contactId);
-    
-    if (contactIndex !== -1) {
-      const unreadCount = updatedConversation.filter(m => !m.read && m.sender !== 0).length;
-      const updatedContacts = [...contacts];
-      updatedContacts[contactIndex] = {
-        ...updatedContacts[contactIndex],
-        unread: unreadCount
+  public async markMessageAsRead(contactId: number, messageId: number): Promise<boolean> {
+    try {
+      this.ensureAuthHeaders();
+      
+      // Try to mark message as read via API
+      const response = await axios.post(
+        `${this.apiUrl}/api/conversations/${contactId}/read`,
+        { messageId }
+      );
+      
+      if (response.status === 200) {
+        // Update local cache for offline access
+        const contacts = this.getContactsSync();
+        const contactIndex = contacts.findIndex((c: Contact) => c.id === contactId);
+        
+        if (contactIndex !== -1) {
+          const updatedContacts = [...contacts];
+          updatedContacts[contactIndex] = {
+            ...updatedContacts[contactIndex],
+            unread: 0
+          };
+          
+          localStorage.setItem(this.STORAGE_KEYS.CONTACTS, JSON.stringify(updatedContacts));
+        }
+        
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('Error marking message as read:', error);
+      
+      // Fallback to local storage
+      const conversations = JSON.parse(localStorage.getItem(this.STORAGE_KEYS.CONVERSATIONS) || '{}');
+      const contactConversation = conversations[contactId] || [];
+      
+      const messageIndex = contactConversation.findIndex((m: Message) => m.id === messageId);
+      if (messageIndex === -1) return false;
+      
+      const updatedConversation = [...contactConversation];
+      updatedConversation[messageIndex] = {
+        ...updatedConversation[messageIndex],
+        read: true
       };
       
-      localStorage.setItem(this.STORAGE_KEYS.CONTACTS, JSON.stringify(updatedContacts));
+      const updatedConversations = {
+        ...conversations,
+        [contactId]: updatedConversation
+      };
+      
+      localStorage.setItem(this.STORAGE_KEYS.CONVERSATIONS, JSON.stringify(updatedConversations));
+      
+      // Update unread count in contacts
+      const contacts = this.getContactsSync();
+      const contactIndex = contacts.findIndex((c: Contact) => c.id === contactId);
+      
+      if (contactIndex !== -1) {
+        const unreadCount = updatedConversation.filter(m => !m.read && m.sender !== 0).length;
+        const updatedContacts = [...contacts];
+        updatedContacts[contactIndex] = {
+          ...updatedContacts[contactIndex],
+          unread: unreadCount
+        };
+        
+        localStorage.setItem(this.STORAGE_KEYS.CONTACTS, JSON.stringify(updatedContacts));
+      }
+      
+      return true;
     }
-    
-    return true;
   }
   
   // Announcements

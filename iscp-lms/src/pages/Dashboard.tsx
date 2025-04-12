@@ -28,6 +28,7 @@ import {
   AccessTime
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { Link as RouterLink } from 'react-router-dom';
 import studentService, { Assignment as StudentAssignment, Announcement, Grade as StudentGrade } from '../services/StudentService';
 import StudentLayout from '../components/StudentLayout';
@@ -51,6 +52,7 @@ const Dashboard: React.FC = () => {
   const { authState } = useAuth();
   const { user } = authState;
   const theme = useTheme();
+  const { language, t } = useLanguage();
 
   const [upcomingAssignments, setUpcomingAssignments] = useState<Assignment[]>([]);
   const [announcements, setAnnouncements] = useState<CampusAnnouncement[]>([]);
@@ -151,6 +153,17 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  // Get unread message count
+  const getUnreadMessageCount = async () => {
+    try {
+      const count = await studentService.getUnreadMessageCount();
+      setUnreadMessageCount(count);
+    } catch (error) {
+      console.error('Error fetching unread message count:', error);
+      setUnreadMessageCount(0);
+    }
+  };
+
   useEffect(() => {
     const loadDashboardData = async () => {
       setLoading(true);
@@ -177,12 +190,9 @@ const Dashboard: React.FC = () => {
           getAssignmentProgress(),
           getCourseCount(),
           getGpaData(),
-          getAnnouncementData()
+          getAnnouncementData(),
+          getUnreadMessageCount()
         ]);
-        
-        // Get unread message count
-        const contacts = await studentService.getContacts();
-        setUnreadMessageCount(contacts.reduce((total, contact) => total + contact.unread, 0));
       } catch (error) {
         console.error('Error loading dashboard data:', error);
       } finally {
@@ -198,18 +208,36 @@ const Dashboard: React.FC = () => {
       loadDashboardData();
     };
 
+    // Listen for new message events
+    const handleNewMessage = () => {
+      console.log('New message event received in Dashboard');
+      getUnreadMessageCount();
+    };
+
     window.addEventListener('user-updated', handleUserUpdate);
+    window.addEventListener('message-received', handleNewMessage);
+    window.addEventListener('message-read', handleNewMessage);
+    
+    // Poll for new messages every 30 seconds
+    const messagePollingInterval = setInterval(() => {
+      getUnreadMessageCount();
+    }, 30000);
     
     return () => {
       window.removeEventListener('user-updated', handleUserUpdate);
+      window.removeEventListener('message-received', handleNewMessage);
+      window.removeEventListener('message-read', handleNewMessage);
+      clearInterval(messagePollingInterval);
     };
   }, [user]);
 
   return (
-    <StudentLayout title="Dashboard">
+    <StudentLayout title={t('dashboard')}>
       <Box sx={{ py: 3 }}>
         <Typography variant="h5" component="h1" fontWeight="bold" mb={3}>
-          Welcome, {firstName || 'Student'}
+          {language === 'English' ? 
+            `Welcome, ${firstName || 'Student'}` : 
+            `Maligayang pagdating, ${firstName || 'Estudyante'}`}
         </Typography>
         
         {/* Quick Stats */}
@@ -229,7 +257,7 @@ const Dashboard: React.FC = () => {
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                 <LibraryBooks sx={{ color: theme.palette.primary.main, mr: 1 }} />
                 <Typography variant="h6" color="white">
-                  Courses
+                  {language === 'English' ? 'Courses' : 'Mga Kurso'}
                 </Typography>
               </Box>
               <Typography variant="h4" component="div" fontWeight="bold" color="white">
@@ -243,7 +271,7 @@ const Dashboard: React.FC = () => {
                   endIcon={<ChevronRight />}
                   sx={{ textTransform: 'none', ml: 'auto' }}
                 >
-                  View all
+                  {language === 'English' ? 'View all' : 'Tingnan lahat'}
                 </Button>
               </Box>
             </Paper>
@@ -262,9 +290,9 @@ const Dashboard: React.FC = () => {
               }}
             >
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                <Assignment sx={{ color: theme.palette.warning.main, mr: 1 }} />
+                <Assignment sx={{ color: theme.palette.error.main, mr: 1 }} />
                 <Typography variant="h6" color="white">
-                  Assignments
+                  {language === 'English' ? 'Assignments' : 'Mga Takdang-aralin'}
                 </Typography>
               </Box>
               <Typography variant="h4" component="div" fontWeight="bold" color="white">
@@ -278,7 +306,7 @@ const Dashboard: React.FC = () => {
                   endIcon={<ChevronRight />}
                   sx={{ textTransform: 'none', ml: 'auto' }}
                 >
-                  View all
+                  {language === 'English' ? 'View all' : 'Tingnan lahat'}
                 </Button>
               </Box>
             </Paper>
@@ -299,7 +327,7 @@ const Dashboard: React.FC = () => {
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                 <Grade sx={{ color: theme.palette.success.main, mr: 1 }} />
                 <Typography variant="h6" color="white">
-                  GPA
+                  {language === 'English' ? 'GPA' : 'GPA'}
                 </Typography>
               </Box>
               <Typography variant="h4" component="div" fontWeight="bold" color="white">
@@ -313,7 +341,7 @@ const Dashboard: React.FC = () => {
                   endIcon={<ChevronRight />}
                   sx={{ textTransform: 'none', ml: 'auto' }}
                 >
-                  View all
+                  {language === 'English' ? 'Details' : 'Mga Detalye'}
                 </Button>
               </Box>
             </Paper>
@@ -332,13 +360,65 @@ const Dashboard: React.FC = () => {
               }}
             >
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                <Email sx={{ color: theme.palette.info.main, mr: 1 }} />
+                <Email sx={{ color: theme.palette.warning.main, mr: 1 }} />
                 <Typography variant="h6" color="white">
-                  Messages
+                  {language === 'English' ? 'Messages' : 'Mga Mensahe'}
                 </Typography>
+                {unreadMessageCount > 0 && (
+                  <Box
+                    sx={{
+                      ml: 1,
+                      width: 16,
+                      height: 16,
+                      borderRadius: '50%',
+                      bgcolor: theme.palette.error.main,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      animation: unreadMessageCount > 0 ? 'pulse 1.5s infinite' : 'none',
+                      '@keyframes pulse': {
+                        '0%': {
+                          boxShadow: '0 0 0 0 rgba(244, 67, 54, 0.7)',
+                        },
+                        '70%': {
+                          boxShadow: '0 0 0 10px rgba(244, 67, 54, 0)',
+                        },
+                        '100%': {
+                          boxShadow: '0 0 0 0 rgba(244, 67, 54, 0)',
+                        },
+                      },
+                    }}
+                  />
+                )}
               </Box>
-              <Typography variant="h4" component="div" fontWeight="bold" color="white">
+              <Typography 
+                variant="h4" 
+                component="div" 
+                fontWeight="bold" 
+                color="white"
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+              >
                 {unreadMessageCount}
+                {unreadMessageCount > 0 && (
+                  <Typography
+                    variant="subtitle2"
+                    component="span"
+                    sx={{
+                      ml: 1,
+                      color: theme.palette.error.main,
+                      fontSize: '0.875rem',
+                      backgroundColor: alpha(theme.palette.error.main, 0.1),
+                      borderRadius: 1,
+                      px: 1,
+                      py: 0.5,
+                    }}
+                  >
+                    {language === 'English' ? 'New' : 'Bago'}
+                  </Typography>
+                )}
               </Typography>
               <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
                 <Button
@@ -346,252 +426,291 @@ const Dashboard: React.FC = () => {
                   to="/messages"
                   size="small"
                   endIcon={<ChevronRight />}
-                  sx={{ textTransform: 'none', ml: 'auto' }}
+                  sx={{ 
+                    textTransform: 'none', 
+                    ml: 'auto',
+                    color: unreadMessageCount > 0 ? theme.palette.error.main : undefined,
+                    fontWeight: unreadMessageCount > 0 ? 'bold' : 'normal',
+                  }}
                 >
-                  View all
+                  {language === 'English' ? 'Open inbox' : 'Buksan ang inbox'}
                 </Button>
               </Box>
             </Paper>
           </Box>
         </Box>
         
-        {/* Assignments */}
-        <Typography variant="h6" fontWeight="bold" mb={2}>
-          Assignment Progress
-        </Typography>
-        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 3, mb: 4 }}>
-          {upcomingAssignments.length > 0 ? (
-            upcomingAssignments.map((assignment, index) => (
-              <Box sx={{ gridColumn: { xs: 'span 12', sm: 'span 6', md: 'span 4' }, width: '100%' }} key={index}>
-                <Card
-                  sx={{
-                    bgcolor: 'rgba(255, 255, 255, 0.05)',
-                    backdropFilter: 'blur(10px)',
-                    borderRadius: 2,
-                    border: '1px solid rgba(255, 255, 255, 0.1)'
-                  }}
-                >
-                  <CardContent>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                      <Typography variant="subtitle1" fontWeight="bold" color="white">
-                        {assignment.title}
-                      </Typography>
-                      <Chip
-                        label={`Due ${new Date(assignment.dueDate).toLocaleDateString()}`}
-                        size="small"
-                        sx={{
-                          bgcolor: alpha(theme.palette.warning.main, 0.1),
-                          color: theme.palette.warning.main,
-                          borderRadius: 1
-                        }}
-                      />
-                    </Box>
-                    <Typography variant="body2" color="rgba(255, 255, 255, 0.7)" mb={2}>
-                      {assignment.courseCode}: {assignment.courseName}
-                    </Typography>
-                    <Box sx={{ mb: 1 }}>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                        <Typography variant="body2" color="rgba(255, 255, 255, 0.7)">
-                          Progress
-                        </Typography>
-                        <Typography variant="body2" color="rgba(255, 255, 255, 0.7)">
-                          {assignment.progress}%
-                        </Typography>
-                      </Box>
-                      <LinearProgress
-                        variant="determinate"
-                        value={assignment.progress || 0}
-                        sx={{
-                          height: 6,
-                          borderRadius: 1,
-                          bgcolor: 'rgba(255, 255, 255, 0.1)',
-                          '& .MuiLinearProgress-bar': {
-                            bgcolor: theme.palette.primary.main
+        {/* Main content */}
+        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 3 }}>
+          {/* Upcoming Assignments */}
+          <Box sx={{ gridColumn: { xs: 'span 12', md: 'span 8' } }}>
+            <Typography variant="h6" component="h2" fontWeight="bold" mb={2} color="white">
+              {language === 'English' ? 'Upcoming Assignments' : 'Darating na Mga Takdang-aralin'}
+            </Typography>
+            <Paper
+              sx={{
+                p: 0,
+                bgcolor: 'rgba(255, 255, 255, 0.05)',
+                backdropFilter: 'blur(10px)',
+                borderRadius: 2,
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                overflow: 'hidden',
+                mb: 4
+              }}
+            >
+              {upcomingAssignments.length > 0 ? (
+                <List sx={{ width: '100%', bgcolor: 'transparent', p: 0 }}>
+                  {upcomingAssignments.map((assignment, index) => (
+                    <React.Fragment key={assignment.id}>
+                      <ListItem 
+                        alignItems="flex-start"
+                        component={RouterLink}
+                        to={`/assignments/${assignment.id}`}
+                        sx={{ 
+                          display: 'block',
+                          p: 2,
+                          color: 'white',
+                          textDecoration: 'none',
+                          '&:hover': {
+                            bgcolor: 'rgba(255, 255, 255, 0.05)'
                           }
                         }}
-                      />
-                    </Box>
-                    <Button
-                      variant="outlined"
-                      fullWidth
-                      sx={{ mt: 2, borderColor: 'rgba(255, 255, 255, 0.2)', color: 'white' }}
-                      component={RouterLink}
-                      to={`/assignments/${assignment.id}`}
-                    >
-                      Continue
-                    </Button>
-                  </CardContent>
-                </Card>
-              </Box>
-            ))
-          ) : (
-            <Box sx={{ gridColumn: 'span 12', width: '100%' }}>
-              <Paper
-                sx={{
-                  p: 3,
-                  bgcolor: 'rgba(255, 255, 255, 0.05)',
-                  backdropFilter: 'blur(10px)',
-                  borderRadius: 2,
-                  border: '1px solid rgba(255, 255, 255, 0.1)'
-                }}
-              >
-                <Typography variant="body1" color="rgba(255, 255, 255, 0.7)" align="center">
-                  No assignments due.
-                </Typography>
-              </Paper>
-            </Box>
-          )}
-        </Box>
-        
-        {/* Announcements */}
-        <Typography variant="h6" fontWeight="bold" mb={2}>
-          Campus Announcements
-        </Typography>
-        <Paper
-          sx={{
-            p: 0,
-            bgcolor: 'rgba(255, 255, 255, 0.05)',
-            backdropFilter: 'blur(10px)',
-            borderRadius: 2,
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            overflow: 'hidden'
-          }}
-        >
-          <List sx={{ p: 0 }}>
-            {announcements.length > 0 ? (
-              announcements.map((announcement, index) => (
-                <React.Fragment key={announcement.id}>
-                  <ListItem
-                    alignItems="flex-start"
-                    sx={{
-                      px: 3,
-                      py: 2,
-                      bgcolor: announcement.important
-                        ? alpha(theme.palette.error.main, 0.05)
-                        : 'transparent',
-                      '&:hover': {
-                        bgcolor: 'rgba(255, 255, 255, 0.03)'
-                      }
-                    }}
-                  >
-                    <ListItemAvatar>
-                      <Avatar
-                        sx={{
-                          bgcolor: announcement.important
-                            ? alpha(theme.palette.error.main, 0.1)
-                            : alpha(theme.palette.primary.main, 0.1),
-                          color: announcement.important
-                            ? theme.palette.error.main
-                            : theme.palette.primary.main
+                      >
+                        <Box sx={{ display: 'flex', mb: 1, justifyContent: 'space-between', alignItems: 'center' }}>
+                          <Typography variant="subtitle1" fontWeight="bold">
+                            {assignment.title}
+                          </Typography>
+                          <Chip 
+                            label={language === 'English' ? `Due ${assignment.dueDate}` : `Hanggang ${assignment.dueDate}`} 
+                            size="small" 
+                            color="primary"
+                            variant="outlined"
+                            icon={<AccessTime sx={{ fontSize: '1rem !important' }} />}
+                          />
+                        </Box>
+                        <Typography variant="body2" color="text.secondary" gutterBottom sx={{ color: 'rgba(255, 255, 255, 0.7)', mb: 1 }}>
+                          {assignment.courseName}
+                        </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          <Box sx={{ width: '100%', mr: 1 }}>
+                            <LinearProgress 
+                              variant="determinate" 
+                              value={assignment.progress || 0} 
+                              sx={{ 
+                                height: 8, 
+                                borderRadius: 5,
+                                backgroundColor: alpha(theme.palette.primary.main, 0.2),
+                                '& .MuiLinearProgress-bar': {
+                                  backgroundColor: theme.palette.primary.main
+                                }
+                              }}
+                            />
+                          </Box>
+                          <Typography variant="body2" color="text.secondary" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                            {`${assignment.progress || 0}%`}
+                          </Typography>
+                        </Box>
+                      </ListItem>
+                      {index < upcomingAssignments.length - 1 && (
+                        <Divider component="li" sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+                      )}
+                    </React.Fragment>
+                  ))}
+                </List>
+              ) : (
+                <Box sx={{ p: 3, textAlign: 'center' }}>
+                  <Typography color="textSecondary" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                    {language === 'English' ? 'No upcoming assignments' : 'Walang darating na mga takdang-aralin'}
+                  </Typography>
+                </Box>
+              )}
+            </Paper>
+            
+            {/* Announcements */}
+            <Typography variant="h6" component="h2" fontWeight="bold" mb={2} color="white">
+              {language === 'English' ? 'Announcements' : 'Mga Anunsyo'}
+            </Typography>
+            <Paper
+              sx={{
+                p: 0,
+                bgcolor: 'rgba(255, 255, 255, 0.05)',
+                backdropFilter: 'blur(10px)',
+                borderRadius: 2,
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                overflow: 'hidden'
+              }}
+            >
+              {announcements.length > 0 ? (
+                <List sx={{ width: '100%', bgcolor: 'transparent', p: 0 }}>
+                  {announcements.slice(0, 3).map((announcement, index) => (
+                    <React.Fragment key={announcement.id}>
+                      <ListItem 
+                        alignItems="flex-start"
+                        sx={{ 
+                          p: 2,
+                          color: 'white',
+                          bgcolor: announcement.important ? alpha(theme.palette.warning.main, 0.1) : 'transparent'
                         }}
                       >
-                        <Campaign />
-                      </Avatar>
-                    </ListItemAvatar>
-                    <ListItemText
-                      primary={
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          <Typography
-                            variant="subtitle1"
-                            color="white"
-                            fontWeight={announcement.read ? 400 : 600}
-                            sx={{ mr: 1 }}
-                          >
-                            {announcement.title}
-                          </Typography>
-                          {announcement.important && (
-                            <Chip
-                              label="Important"
-                              size="small"
-                              sx={{
-                                bgcolor: alpha(theme.palette.error.main, 0.1),
-                                color: theme.palette.error.main,
-                                height: 20,
-                                fontSize: '0.7rem'
-                              }}
-                            />
-                          )}
-                        </Box>
-                      }
-                      secondary={
-                        <React.Fragment>
-                          <Typography
-                            variant="body2"
-                            color="rgba(255, 255, 255, 0.7)"
-                            component="div"
-                          >
-                            {announcement.content}
-                          </Typography>
-                          <Box 
-                            component="div" 
-                            sx={{ 
-                              display: 'flex', 
-                              alignItems: 'center', 
-                              mt: 1 
-                            }}
-                          >
-                            <AccessTime
-                              sx={{ fontSize: 14, color: 'rgba(255, 255, 255, 0.5)', mr: 0.5 }}
-                            />
-                            <Typography
-                              variant="caption"
-                              color="rgba(255, 255, 255, 0.5)"
-                              component="span"
-                            >
-                              {announcement.date}
-                            </Typography>
-                            <Box
-                              component="span"
-                              sx={{
-                                height: 4,
-                                width: 4,
-                                bgcolor: 'rgba(255, 255, 255, 0.5)',
-                                borderRadius: '50%',
-                                mx: 1
-                              }}
-                            />
-                            <Typography
-                              variant="caption"
-                              color="rgba(255, 255, 255, 0.5)"
-                              component="span"
-                            >
-                              {announcement.campus}
-                            </Typography>
-                          </Box>
-                        </React.Fragment>
-                      }
-                    />
-                  </ListItem>
-                  {index < announcements.length - 1 && (
-                    <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />
-                  )}
-                </React.Fragment>
-              ))
-            ) : (
-              <ListItem>
-                <ListItemText
-                  primary={
-                    <Typography variant="body1" color="rgba(255, 255, 255, 0.7)" align="center">
-                      No announcements available.
-                    </Typography>
-                  }
-                />
-              </ListItem>
-            )}
-          </List>
-          {announcements.length > 0 && (
-            <Box sx={{ p: 2, borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
-              <Button
-                endIcon={<ArrowForward />}
-                sx={{ textTransform: 'none' }}
-                component={RouterLink}
-                to="/dashboard?view=announcements"
+                        <ListItemAvatar>
+                          <Avatar sx={{ bgcolor: announcement.important ? theme.palette.warning.main : theme.palette.grey[700] }}>
+                            <Campaign />
+                          </Avatar>
+                        </ListItemAvatar>
+                        <ListItemText
+                          primary={
+                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                              <Typography variant="subtitle1" fontWeight="bold" sx={{ flex: 1 }}>
+                                {announcement.title}
+                              </Typography>
+                              {announcement.important && (
+                                <Chip 
+                                  label={language === 'English' ? 'Important' : 'Mahalaga'} 
+                                  size="small" 
+                                  color="warning"
+                                  sx={{ ml: 1 }}
+                                />
+                              )}
+                            </Box>
+                          }
+                          secondary={
+                            <React.Fragment>
+                              <Typography
+                                component="span"
+                                variant="body2"
+                                color="text.secondary"
+                                sx={{ color: 'rgba(255, 255, 255, 0.7)', display: 'inline' }}
+                              >
+                                {announcement.content.length > 120 
+                                  ? `${announcement.content.substring(0, 120)}...` 
+                                  : announcement.content}
+                              </Typography>
+                              <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
+                                <Typography variant="caption" color="text.secondary" sx={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+                                  {announcement.date} • {announcement.campus}
+                                </Typography>
+                                <Button size="small" sx={{ ml: 'auto', textTransform: 'none' }}>
+                                  {language === 'English' ? 'Read more' : 'Magbasa pa'}
+                                </Button>
+                              </Box>
+                            </React.Fragment>
+                          }
+                        />
+                      </ListItem>
+                      {index < announcements.length - 1 && (
+                        <Divider component="li" sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+                      )}
+                    </React.Fragment>
+                  ))}
+                </List>
+              ) : (
+                <Box sx={{ p: 3, textAlign: 'center' }}>
+                  <Typography color="textSecondary" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                    {language === 'English' ? 'No announcements' : 'Walang mga anunsyo'}
+                  </Typography>
+                </Box>
+              )}
+            </Paper>
+          </Box>
+          
+          {/* Profile Card */}
+          <Box sx={{ gridColumn: { xs: 'span 12', md: 'span 4' } }}>
+            <Card
+              sx={{
+                p: 0,
+                bgcolor: 'rgba(255, 255, 255, 0.05)',
+                backdropFilter: 'blur(10px)',
+                borderRadius: 2,
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                overflow: 'hidden',
+                mb: 3
+              }}
+            >
+              <Box
+                sx={{
+                  height: 100,
+                  backgroundColor: theme.palette.primary.main,
+                  backgroundImage: 'linear-gradient(to right, rgba(25, 118, 210, 0.8), rgba(25, 118, 210, 0.6))'
+                }}
+              />
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  p: 3,
+                  mt: -6
+                }}
               >
-                View all announcements
-              </Button>
-            </Box>
-          )}
-        </Paper>
+                <Avatar
+                  alt={user?.fullName || 'User'}
+                  src={profileImageUrl}
+                  sx={{
+                    width: 100,
+                    height: 100,
+                    border: '4px solid rgba(255, 255, 255, 0.2)',
+                    mb: 2
+                  }}
+                >
+                  {!profileImageUrl && user?.fullName && user.fullName.charAt(0)}
+                </Avatar>
+                <Typography variant="h6" component="div" fontWeight="bold" align="center" gutterBottom>
+                  {user?.fullName || 'Student'}
+                </Typography>
+                <Typography color="textSecondary" sx={{ color: 'rgba(255, 255, 255, 0.7)', mb: 2 }}>
+                  {user?.email || 'student@iscp.edu'}
+                </Typography>
+                <Chip 
+                  label={user?.campus || 'Campus'}
+                  size="small"
+                  sx={{ mb: 2 }}
+                />
+                <Button
+                  variant="outlined"
+                  component={RouterLink}
+                  to="/settings"
+                  sx={{ textTransform: 'none', width: '100%', mt: 2 }}
+                >
+                  {language === 'English' ? 'Edit Profile' : 'I-edit ang Profile'}
+                </Button>
+              </Box>
+            </Card>
+            
+            {/* Quick Links */}
+            <Paper
+              sx={{
+                p: 2,
+                bgcolor: 'rgba(255, 255, 255, 0.05)',
+                backdropFilter: 'blur(10px)',
+                borderRadius: 2,
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                overflow: 'hidden'
+              }}
+            >
+              <Typography variant="h6" component="h2" fontWeight="bold" mb={2} color="white">
+                {language === 'English' ? 'Quick Links' : 'Mabilisang Links'}
+              </Typography>
+              <List>
+                <ListItem component={RouterLink} to="/courses" sx={{ p: 1, borderRadius: 1, color: 'white', textDecoration: 'none', '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.05)' } }}>
+                  <ListItemText primary={language === 'English' ? "My Courses" : "Mga Kurso Ko"} />
+                  <ChevronRight sx={{ color: 'rgba(255, 255, 255, 0.5)' }} />
+                </ListItem>
+                <ListItem component={RouterLink} to="/grades" sx={{ p: 1, borderRadius: 1, color: 'white', textDecoration: 'none', '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.05)' } }}>
+                  <ListItemText primary={language === 'English' ? "Grade Report" : "Ulat ng Grado"} />
+                  <ChevronRight sx={{ color: 'rgba(255, 255, 255, 0.5)' }} />
+                </ListItem>
+                <ListItem component={RouterLink} to="/materials" sx={{ p: 1, borderRadius: 1, color: 'white', textDecoration: 'none', '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.05)' } }}>
+                  <ListItemText primary={language === 'English' ? "Learning Materials" : "Mga Materyales sa Pag-aaral"} />
+                  <ChevronRight sx={{ color: 'rgba(255, 255, 255, 0.5)' }} />
+                </ListItem>
+                <ListItem component={RouterLink} to="/settings" sx={{ p: 1, borderRadius: 1, color: 'white', textDecoration: 'none', '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.05)' } }}>
+                  <ListItemText primary={language === 'English' ? "Account Settings" : "Mga Setting ng Account"} />
+                  <ChevronRight sx={{ color: 'rgba(255, 255, 255, 0.5)' }} />
+                </ListItem>
+              </List>
+            </Paper>
+          </Box>
+        </Box>
       </Box>
     </StudentLayout>
   );

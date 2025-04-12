@@ -101,11 +101,11 @@ const AdminDashboard: React.FC = () => {
 
   // Navigation handlers
   const handleNavigateToUsers = () => {
-    navigate('/admin/user-management');
+    navigate('/admin/users');
   };
 
   const handleNavigateToCourses = () => {
-    navigate('/admin/course-management');
+    navigate('/admin/courses');
   };
 
   const handleNavigateToAnnouncements = () => {
@@ -113,15 +113,19 @@ const AdminDashboard: React.FC = () => {
   };
 
   const handleNavigateToArchives = () => {
-    navigate('/admin/academic-archives');
+    navigate('/admin/archives');
   };
 
   const handleNavigateToSystemMonitor = () => {
-    navigate('/admin/system-monitor');
+    navigate('/admin/system');
   };
 
   const handleNavigateToMessages = () => {
     navigate('/admin/messages');
+  };
+
+  const handleNavigateToSettings = () => {
+    navigate('/admin/settings');
   };
 
   return (
@@ -345,19 +349,19 @@ const AdminDashboard: React.FC = () => {
             </Grid>
 
             {/* Quick Links */}
-            <Box mb={4}>
-              <Typography variant="h6" color="white" mb={2}>
+            <Box mb={3}>
+              <Typography variant="h6" color="white" mb={1}>
                 Quick Actions
               </Typography>
               <Box sx={{ 
-                p: 3, 
+                p: 2, 
                 bgcolor: 'rgba(255, 255, 255, 0.05)',
                 backdropFilter: 'blur(10px)',
                 borderRadius: 2,
                 border: '1px solid rgba(255, 255, 255, 0.1)'
               }}>
-                <Grid container spacing={3}>
-                  <Box sx={{ gridColumn: { xs: 'span 12', sm: 'span 6', md: 'span 3' }, width: '100%', px: 1.5 }}>
+                <Grid container spacing={2}>
+                  <Box sx={{ gridColumn: { xs: 'span 6', sm: 'span 4', md: 'span 3' }, width: '100%', px: 1 }}>
                     <Card 
                       sx={{ 
                         bgcolor: 'rgba(0, 0, 0, 0.2)',
@@ -374,29 +378,26 @@ const AdminDashboard: React.FC = () => {
                       }}
                       onClick={handleNavigateToUsers}
                     >
-                      <CardContent sx={{ textAlign: 'center' }}>
+                      <CardContent sx={{ textAlign: 'center', p: 1.5, '&:last-child': { pb: 1.5 } }}>
                         <Box sx={{ 
-                          p: 1.5, 
+                          p: 1, 
                           bgcolor: alpha(theme.palette.primary.main, 0.1), 
                           borderRadius: '50%',
                           display: 'inline-flex',
                           justifyContent: 'center',
                           alignItems: 'center',
-                          mb: 1
+                          mb: 0.5
                         }}>
-                          <PeopleAlt sx={{ color: theme.palette.primary.main }} />
+                          <PeopleAlt sx={{ color: theme.palette.primary.main, fontSize: '1.2rem' }} />
                         </Box>
-                        <Typography variant="h6" color="white" mb={1}>
+                        <Typography variant="subtitle1" color="white">
                           User Management
-                        </Typography>
-                        <Typography variant="body2" color="rgba(255, 255, 255, 0.7)">
-                          Manage user accounts
                         </Typography>
                       </CardContent>
                     </Card>
                   </Box>
                   
-                  <Box sx={{ gridColumn: { xs: 'span 12', sm: 'span 6', md: 'span 3' }, width: '100%', px: 1.5 }}>
+                  <Box sx={{ gridColumn: { xs: 'span 6', sm: 'span 4', md: 'span 3' }, width: '100%', px: 1 }}>
                     <Card 
                       sx={{ 
                         bgcolor: 'rgba(0, 0, 0, 0.2)',
@@ -413,29 +414,26 @@ const AdminDashboard: React.FC = () => {
                       }}
                       onClick={handleNavigateToCourses}
                     >
-                      <CardContent sx={{ textAlign: 'center' }}>
+                      <CardContent sx={{ textAlign: 'center', p: 1.5, '&:last-child': { pb: 1.5 } }}>
                         <Box sx={{ 
-                          p: 1.5, 
+                          p: 1, 
                           bgcolor: alpha(theme.palette.success.main, 0.1), 
                           borderRadius: '50%',
                           display: 'inline-flex',
                           justifyContent: 'center',
                           alignItems: 'center',
-                          mb: 1
+                          mb: 0.5
                         }}>
-                          <LibraryBooks sx={{ color: theme.palette.success.main }} />
+                          <LibraryBooks sx={{ color: theme.palette.success.main, fontSize: '1.2rem' }} />
                         </Box>
-                        <Typography variant="h6" color="white" mb={1}>
+                        <Typography variant="subtitle1" color="white">
                           Course Management
-                        </Typography>
-                        <Typography variant="body2" color="rgba(255, 255, 255, 0.7)">
-                          Manage courses
                         </Typography>
                       </CardContent>
                     </Card>
                   </Box>
                   
-                  <Box sx={{ gridColumn: { xs: 'span 12', sm: 'span 6', md: 'span 3' }, width: '100%', px: 1.5 }}>
+                  <Box sx={{ gridColumn: { xs: 'span 6', sm: 'span 4', md: 'span 3' }, width: '100%', px: 1 }}>
                     <Card 
                       sx={{ 
                         bgcolor: 'rgba(0, 0, 0, 0.2)',
@@ -452,29 +450,26 @@ const AdminDashboard: React.FC = () => {
                       }}
                       onClick={handleNavigateToAnnouncements}
                     >
-                      <CardContent sx={{ textAlign: 'center' }}>
+                      <CardContent sx={{ textAlign: 'center', p: 1.5, '&:last-child': { pb: 1.5 } }}>
                         <Box sx={{ 
-                          p: 1.5, 
+                          p: 1, 
                           bgcolor: alpha(theme.palette.warning.main, 0.1), 
                           borderRadius: '50%',
                           display: 'inline-flex',
                           justifyContent: 'center',
                           alignItems: 'center',
-                          mb: 1
+                          mb: 0.5
                         }}>
-                          <Announcement sx={{ color: theme.palette.warning.main }} />
+                          <Announcement sx={{ color: theme.palette.warning.main, fontSize: '1.2rem' }} />
                         </Box>
-                        <Typography variant="h6" color="white" mb={1}>
+                        <Typography variant="subtitle1" color="white">
                           Announcements
-                        </Typography>
-                        <Typography variant="body2" color="rgba(255, 255, 255, 0.7)">
-                          Manage announcements
                         </Typography>
                       </CardContent>
                     </Card>
                   </Box>
                   
-                  <Box sx={{ gridColumn: { xs: 'span 12', sm: 'span 6', md: 'span 3' }, width: '100%', px: 1.5 }}>
+                  <Box sx={{ gridColumn: { xs: 'span 6', sm: 'span 4', md: 'span 3' }, width: '100%', px: 1 }}>
                     <Card 
                       sx={{ 
                         bgcolor: 'rgba(0, 0, 0, 0.2)',
@@ -491,23 +486,129 @@ const AdminDashboard: React.FC = () => {
                       }}
                       onClick={handleNavigateToMessages}
                     >
-                      <CardContent sx={{ textAlign: 'center' }}>
+                      <CardContent sx={{ textAlign: 'center', p: 1.5, '&:last-child': { pb: 1.5 } }}>
                         <Box sx={{ 
-                          p: 1.5, 
+                          p: 1, 
                           bgcolor: alpha(theme.palette.info.main, 0.1), 
                           borderRadius: '50%',
                           display: 'inline-flex',
                           justifyContent: 'center',
                           alignItems: 'center',
-                          mb: 1
+                          mb: 0.5
                         }}>
-                          <Forum sx={{ color: theme.palette.info.main }} />
+                          <Forum sx={{ color: theme.palette.info.main, fontSize: '1.2rem' }} />
                         </Box>
-                        <Typography variant="h6" color="white" mb={1}>
+                        <Typography variant="subtitle1" color="white">
                           Messages
                         </Typography>
-                        <Typography variant="body2" color="rgba(255, 255, 255, 0.7)">
-                          Communication center
+                      </CardContent>
+                    </Card>
+                  </Box>
+
+                  {/* Second row for additional quick action cards */}
+                  <Box sx={{ gridColumn: { xs: 'span 6', sm: 'span 4', md: 'span 3' }, width: '100%', px: 1 }}>
+                    <Card 
+                      sx={{ 
+                        bgcolor: 'rgba(0, 0, 0, 0.2)',
+                        borderRadius: 2,
+                        border: '1px solid rgba(255, 255, 255, 0.05)',
+                        height: '100%',
+                        transition: 'all 0.2s',
+                        '&:hover': {
+                          bgcolor: 'rgba(0, 0, 0, 0.3)',
+                          transform: 'translateY(-2px)',
+                          boxShadow: '0 4px 10px rgba(0, 0, 0, 0.3)'
+                        },
+                        cursor: 'pointer'
+                      }}
+                      onClick={handleNavigateToArchives}
+                    >
+                      <CardContent sx={{ textAlign: 'center', p: 1.5, '&:last-child': { pb: 1.5 } }}>
+                        <Box sx={{ 
+                          p: 1, 
+                          bgcolor: alpha(theme.palette.secondary.main, 0.1), 
+                          borderRadius: '50%',
+                          display: 'inline-flex',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          mb: 0.5
+                        }}>
+                          <School sx={{ color: theme.palette.secondary.main, fontSize: '1.2rem' }} />
+                        </Box>
+                        <Typography variant="subtitle1" color="white">
+                          Academic Archives
+                        </Typography>
+                      </CardContent>
+                    </Card>
+                  </Box>
+
+                  <Box sx={{ gridColumn: { xs: 'span 6', sm: 'span 4', md: 'span 3' }, width: '100%', px: 1 }}>
+                    <Card 
+                      sx={{ 
+                        bgcolor: 'rgba(0, 0, 0, 0.2)',
+                        borderRadius: 2,
+                        border: '1px solid rgba(255, 255, 255, 0.05)',
+                        height: '100%',
+                        transition: 'all 0.2s',
+                        '&:hover': {
+                          bgcolor: 'rgba(0, 0, 0, 0.3)',
+                          transform: 'translateY(-2px)',
+                          boxShadow: '0 4px 10px rgba(0, 0, 0, 0.3)'
+                        },
+                        cursor: 'pointer'
+                      }}
+                      onClick={handleNavigateToSystemMonitor}
+                    >
+                      <CardContent sx={{ textAlign: 'center', p: 1.5, '&:last-child': { pb: 1.5 } }}>
+                        <Box sx={{ 
+                          p: 1, 
+                          bgcolor: alpha(theme.palette.error.main, 0.1), 
+                          borderRadius: '50%',
+                          display: 'inline-flex',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          mb: 0.5
+                        }}>
+                          <Storage sx={{ color: theme.palette.error.main, fontSize: '1.2rem' }} />
+                        </Box>
+                        <Typography variant="subtitle1" color="white">
+                          System Monitor
+                        </Typography>
+                      </CardContent>
+                    </Card>
+                  </Box>
+
+                  <Box sx={{ gridColumn: { xs: 'span 6', sm: 'span 4', md: 'span 3' }, width: '100%', px: 1 }}>
+                    <Card 
+                      sx={{ 
+                        bgcolor: 'rgba(0, 0, 0, 0.2)',
+                        borderRadius: 2,
+                        border: '1px solid rgba(255, 255, 255, 0.05)',
+                        height: '100%',
+                        transition: 'all 0.2s',
+                        '&:hover': {
+                          bgcolor: 'rgba(0, 0, 0, 0.3)',
+                          transform: 'translateY(-2px)',
+                          boxShadow: '0 4px 10px rgba(0, 0, 0, 0.3)'
+                        },
+                        cursor: 'pointer'
+                      }}
+                      onClick={handleNavigateToSettings}
+                    >
+                      <CardContent sx={{ textAlign: 'center', p: 1.5, '&:last-child': { pb: 1.5 } }}>
+                        <Box sx={{ 
+                          p: 1, 
+                          bgcolor: alpha(theme.palette.primary.light, 0.1), 
+                          borderRadius: '50%',
+                          display: 'inline-flex',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          mb: 0.5
+                        }}>
+                          <Settings sx={{ color: theme.palette.primary.light, fontSize: '1.2rem' }} />
+                        </Box>
+                        <Typography variant="subtitle1" color="white">
+                          Settings
                         </Typography>
                       </CardContent>
                     </Card>

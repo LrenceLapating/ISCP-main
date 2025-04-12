@@ -1151,40 +1151,6 @@ const Messages: React.FC = () => {
         </Box>
       </Box>
       
-      {/* Fixed bottom NEW MESSAGE button */}
-      <Box 
-        sx={{ 
-          position: 'fixed',
-          left: { xs: 0, md: 320 },
-          bottom: 20,
-          width: { xs: '100%', md: 'auto' },
-          display: 'flex',
-          justifyContent: { xs: 'center', md: 'flex-start' },
-          zIndex: 10,
-          ml: { md: 3 }
-        }}
-      >
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={<Create sx={{ fontSize: 16 }} />}
-          onClick={handleOpenNewMessageDialog}
-          sx={{ 
-            boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
-            textTransform: 'uppercase',
-            px: 3,
-            py: 1.5,
-            fontWeight: 500,
-            letterSpacing: '0.5px',
-            borderRadius: 1,
-            bgcolor: '#1976d2',
-            fontSize: '0.8rem',
-          }}
-        >
-          New Message
-        </Button>
-      </Box>
-      
       {/* New Message Dialog */}
       <Dialog 
         open={newMessageDialogOpen} 
