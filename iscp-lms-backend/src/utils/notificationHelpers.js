@@ -342,7 +342,6 @@ const notifyCourseEnrollment = async (courseId, studentName, courseTitle) => {
         FROM course_enrollments e
         JOIN users u ON e.student_id = u.id
         WHERE e.course_id = ?
-        ORDER BY e.created_at DESC
         LIMIT 1
       `, [courseId]);
       
@@ -435,4 +434,4 @@ module.exports = {
   notifyDiscussionReply,
   notifyCourseEnrollment,
   notifyCourseRequest
-}; 
+};

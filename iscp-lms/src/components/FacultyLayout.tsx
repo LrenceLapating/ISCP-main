@@ -145,12 +145,6 @@ const FacultyLayout: React.FC<FacultyLayoutProps> = ({ children, title }) => {
       active: location.pathname.includes('/faculty/assignments') && !location.pathname.includes('/submissions') 
     },
     { 
-      path: '/faculty/submissions', 
-      text: language === 'English' ? 'Submissions' : 'Mga Pagsusumite', 
-      icon: <Grade />, 
-      active: location.pathname.includes('/faculty/submissions') 
-    },
-    { 
       path: '/faculty/materials', 
       text: t('materials'), 
       icon: <DescriptionOutlined />, 
@@ -429,4 +423,4 @@ const FacultyLayout: React.FC<FacultyLayoutProps> = ({ children, title }) => {
   );
 };
 
-export default FacultyLayout; 
+export default FacultyLayout;
