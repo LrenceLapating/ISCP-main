@@ -136,6 +136,37 @@ const StudentLayout: React.FC<StudentLayoutProps> = ({ children, title }) => {
     navigate('/login');
   };
   
+  // Add translations for ISCP Student title and My Courses
+  const getISCPStudentTranslation = () => {
+    switch(language) {
+      case 'Greek':
+        return 'ISCP Φοιτητής';
+      case 'Filipino':
+        return 'ISCP Estudyante';
+      case 'Waray':
+        return 'ISCP Estudyante';
+      case 'Arabic':
+        return 'ISCP طالب';
+      default:
+        return 'ISCP Student';
+    }
+  };
+
+  const getMyCoursesTranslation = () => {
+    switch(language) {
+      case 'Greek':
+        return 'Τα Μαθήματά μου';
+      case 'Filipino':
+        return 'Mga Kurso Ko';
+      case 'Waray':
+        return 'Akon mga Kurso';
+      case 'Arabic':
+        return 'دوراتي';
+      default:
+        return 'My Courses';
+    }
+  };
+  
   const navigationItems = [
     { 
       path: '/dashboard', 
@@ -145,7 +176,7 @@ const StudentLayout: React.FC<StudentLayoutProps> = ({ children, title }) => {
     },
     { 
       path: '/courses', 
-      text: language === 'English' ? 'My Courses' : 'Mga Kurso Ko', 
+      text: getMyCoursesTranslation(), 
       icon: <LibraryBooks />, 
       active: location.pathname.includes('/courses') 
     },
@@ -191,7 +222,7 @@ const StudentLayout: React.FC<StudentLayoutProps> = ({ children, title }) => {
       }}>
         <School sx={{ mr: 1.5, fontSize: 28 }} />
         <Typography variant="h6" component="div" sx={{ fontWeight: 'bold' }}>
-          {language === 'English' ? 'ISCP Student' : 'ISCP Estudyante'}
+          {getISCPStudentTranslation()}
         </Typography>
       </Box>
       <List sx={{ flexGrow: 1 }}>

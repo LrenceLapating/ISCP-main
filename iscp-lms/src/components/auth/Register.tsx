@@ -45,7 +45,7 @@ const Register: React.FC = () => {
     password: '',
     confirmPassword: '',
     role: 'student' as 'student' | 'teacher',
-    campus: 'Biringan Campus'
+    campus: 'Main Campus: Undisclosed location, Philippines'
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -150,11 +150,11 @@ const Register: React.FC = () => {
   };
 
   const campuses = [
+    'Main Campus: Undisclosed location, Philippines',
     'Biringan Campus',
-    'Wakanda Campus',
-    'Atlantis Campus',
-    'El Dorado Campus',
-    'Asgard Campus'
+    'Sun and Moon Campus',
+    'Galactic Campus',
+    'Atlantis Campus'
   ];
 
   return (

@@ -49,10 +49,10 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 import { studentService, UserSettings } from '../../services/StudentService';
-import { useTheme as useMuiTheme } from '@mui/material/styles';
-import { useTheme as useAppTheme } from '../../contexts/ThemeContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { styled } from '@mui/material/styles';
+import { useTheme as useMuiTheme } from '@mui/material/styles';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -93,8 +93,8 @@ const Input = styled('input')({
 
 const Settings: React.FC = () => {
   const muiTheme = useMuiTheme();
-  const { mode, setThemeMode } = useAppTheme();
-  const { language, setLanguage, t } = useLanguage();
+  const { mode, setThemeMode } = useTheme();
+  const { language, setLanguage, getAvailableLanguages, t } = useLanguage();
   const { authState, updateUserProfile } = useAuth();
   
   const [tabValue, setTabValue] = useState(0);
@@ -409,7 +409,7 @@ const Settings: React.FC = () => {
   };
 
   // Add a function to update language
-  const handleLanguageChange = (newLanguage: 'English' | 'Filipino') => {
+  const handleLanguageChange = (newLanguage: string) => {
     // Update UI state
     setProfile({
       ...profile,
@@ -417,7 +417,7 @@ const Settings: React.FC = () => {
     });
     
     // Apply language change immediately
-    setLanguage(newLanguage);
+    setLanguage(newLanguage as any);
   };
 
   // Add a function to update privacy settings
@@ -445,9 +445,7 @@ const Settings: React.FC = () => {
             {t('settings')}
           </Typography>
           <Typography variant="subtitle1" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-            {language === 'English' ? 
-              'Manage your account settings and preferences' : 
-              'Pamahalaan ang iyong mga setting at kagustuhan ng account'}
+            {t('manageSettings')}
           </Typography>
         </Box>
 
@@ -516,7 +514,7 @@ const Settings: React.FC = () => {
                       {profile.first_name} {profile.last_name}
                     </Typography>
                     <Typography variant="body1" sx={{ color: 'rgba(255, 255, 255, 0.7)', mb: 1 }}>
-                      Student
+                      {t('student')}
                     </Typography>
                     <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
                       ID: {profile.student_id} • Campus: {profile.campus}
@@ -598,10 +596,10 @@ const Settings: React.FC = () => {
                     }
                   }}
                 >
-                  <Tab icon={<Person sx={{ fontSize: 20 }} />} iconPosition="start" label={language === 'English' ? 'Profile' : 'Profile'} />
-                  <Tab icon={<Security sx={{ fontSize: 20 }} />} iconPosition="start" label={language === 'English' ? 'Password & Security' : 'Password at Seguridad'} />
-                  <Tab icon={<Notifications sx={{ fontSize: 20 }} />} iconPosition="start" label={language === 'English' ? 'Notifications' : 'Mga Notipikasyon'} />
-                  <Tab icon={<ColorLens sx={{ fontSize: 20 }} />} iconPosition="start" label={language === 'English' ? 'Appearance' : 'Hitsura'} />
+                  <Tab icon={<Person sx={{ fontSize: 20 }} />} iconPosition="start" label={t('profileSettings')} />
+                  <Tab icon={<Security sx={{ fontSize: 20 }} />} iconPosition="start" label={t('passwordSecurity')} />
+                  <Tab icon={<Notifications sx={{ fontSize: 20 }} />} iconPosition="start" label={t('notificationSettings')} />
+                  <Tab icon={<ColorLens sx={{ fontSize: 20 }} />} iconPosition="start" label={t('appearance')} />
                 </Tabs>
               </Box>
 
@@ -609,7 +607,7 @@ const Settings: React.FC = () => {
               <TabPanel value={tabValue} index={0}>
                 <Box sx={{ p: { xs: 2, sm: 3 } }}>
                   <Typography variant="h6" gutterBottom sx={{ color: '#fff', fontWeight: 600 }}>
-                    {language === 'English' ? 'Personal Information' : 'Personal na Impormasyon'}
+                    {t('personalInfo')}
                   </Typography>
                   
                   <Grid container spacing={3}>
@@ -742,8 +740,7 @@ const Settings: React.FC = () => {
                       disabled={saving}
                       sx={{ borderRadius: 2, px: 3 }}
                     >
-                      {saving ? (language === 'English' ? 'Saving...' : 'Nag-sasave...') : 
-                       (language === 'English' ? 'Save Changes' : 'I-save ang mga Pagbabago')}
+                      {saving ? t('saving') : t('saveChanges')}
                     </Button>
                   </Box>
                 </Box>
@@ -753,7 +750,7 @@ const Settings: React.FC = () => {
               <TabPanel value={tabValue} index={1}>
                 <Box sx={{ p: { xs: 2, sm: 3 } }}>
                   <Typography variant="h6" gutterBottom sx={{ color: '#fff', fontWeight: 600 }}>
-                    {language === 'English' ? 'Change Password' : 'Palitan ang Password'}
+                    {t('changePassword')}
                   </Typography>
                   
                   <Grid container spacing={3}>
@@ -884,8 +881,7 @@ const Settings: React.FC = () => {
                       }
                       sx={{ borderRadius: 2, px: 3 }}
                     >
-                      {saving ? (language === 'English' ? 'Saving...' : 'Nag-sasave...') : 
-                       (language === 'English' ? 'Update Password' : 'I-update ang Password')}
+                      {saving ? t('saving') : t('updatePassword')}
                     </Button>
                   </Box>
                 </Box>
@@ -895,7 +891,7 @@ const Settings: React.FC = () => {
               <TabPanel value={tabValue} index={2}>
                 <Box sx={{ p: { xs: 2, sm: 3 } }}>
                   <Typography variant="h6" gutterBottom sx={{ color: '#fff', fontWeight: 600 }}>
-                    {language === 'English' ? 'Notification Preferences' : 'Mga Kagustuhan sa Notipikasyon'}
+                    {t('notificationPreferences')}
                   </Typography>
                   
                   <List sx={{ width: '100%' }}>
@@ -1010,8 +1006,7 @@ const Settings: React.FC = () => {
                       disabled={saving}
                       sx={{ borderRadius: 2, px: 3 }}
                     >
-                      {saving ? (language === 'English' ? 'Saving...' : 'Nag-sasave...') : 
-                       (language === 'English' ? 'Save Preferences' : 'I-save ang mga Kagustuhan')}
+                      {saving ? t('saving') : t('savePreferences')}
                     </Button>
                   </Box>
                 </Box>
@@ -1068,22 +1063,17 @@ const Settings: React.FC = () => {
                         secondaryTypographyProps={{ color: 'rgba(255, 255, 255, 0.7)' }}
                       />
                       <ListItemSecondaryAction>
-                        <Button 
-                          variant={profile.language === 'English' ? 'contained' : 'outlined'}
-                          size="small"
-                          onClick={() => handleLanguageChange('English')}
-                          sx={{ mr: 1, minWidth: 100 }}
-                        >
-                          English
-                        </Button>
-                        <Button 
-                          variant={profile.language === 'Filipino' ? 'contained' : 'outlined'}
-                          size="small"
-                          onClick={() => handleLanguageChange('Filipino')}
-                          sx={{ minWidth: 100 }}
-                        >
-                          Filipino
-                        </Button>
+                        {getAvailableLanguages(profile.campus).map((lang) => (
+                          <Button 
+                            key={lang}
+                            variant={profile.language === lang ? 'contained' : 'outlined'}
+                            size="small"
+                            onClick={() => handleLanguageChange(lang)}
+                            sx={{ mr: 1, minWidth: 100 }}
+                          >
+                            {lang}
+                          </Button>
+                        ))}
                       </ListItemSecondaryAction>
                     </ListItem>
                     
@@ -1187,12 +1177,10 @@ const Settings: React.FC = () => {
                 }}
               >
                 <Typography variant="h6" sx={{ color: '#ff3d3d', mb: 1 }}>
-                  {language === 'English' ? 'Danger Zone' : 'Mapanganib na Zone'}
+                  {t('dangerZone')}
                 </Typography>
                 <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)', mb: 2 }}>
-                  {language === 'English' ? 
-                    'These actions are permanent and cannot be undone. Please proceed with caution.' : 
-                    'Ang mga aksyong ito ay permanente at hindi maaaring ibalik. Mangyaring mag-ingat.'}
+                  {t('dangerWarning')}
                 </Typography>
                 <Button 
                   variant="outlined" 
@@ -1206,7 +1194,7 @@ const Settings: React.FC = () => {
                     }
                   }}
                 >
-                  {language === 'English' ? 'Delete Account' : 'Burahin ang Account'}
+                  {t('deleteAccount')}
                 </Button>
               </Paper>
             </Box>

@@ -10,7 +10,7 @@ import {
 import {
   Search, Add, Folder, InsertDriveFile, Link as LinkIcon,
   YouTube, VideoLibrary, Book, Description, MoreVert, 
-  Delete, Edit, CloudUpload, FilterList, Download, Close
+  Delete, Edit, CloudUpload, FilterList, Download
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import facultyService, { Course, Material } from '../../services/FacultyService';
@@ -69,10 +69,6 @@ const Materials: React.FC = () => {
   // State for edit mode
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingMaterial, setEditingMaterial] = useState<Material | null>(null);
-  
-  // Add state for the details dialog
-  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
-  const [selectedMaterialDetails, setSelectedMaterialDetails] = useState<Material | null>(null);
   
   // Fetch materials and courses on component mount
   useEffect(() => {
@@ -380,20 +376,12 @@ const Materials: React.FC = () => {
     const material = materials.find(m => m.id === materialId);
     if (!material) return;
     
-    // Set the selected material and open the dialog
-    setSelectedMaterialDetails(material);
-    setDetailsDialogOpen(true);
-  };
-  
-  const handleDownloadFromDetails = () => {
-    if (!selectedMaterialDetails) return;
-    
-    if (selectedMaterialDetails.type === 'link' && selectedMaterialDetails.url) {
+    if (material.type === 'link' && material.url) {
       // Open link in a new tab
-      window.open(selectedMaterialDetails.url, '_blank');
+      window.open(material.url, '_blank');
     } else {
       // For documents and other files, open the file URL
-      const fileUrl = selectedMaterialDetails.fileUrl || selectedMaterialDetails.url;
+      const fileUrl = material.fileUrl || material.url;
       if (fileUrl) {
         // If it's not an absolute URL, prepend API base URL
         const fullUrl = fileUrl.startsWith('http') 
@@ -618,14 +606,8 @@ const Materials: React.FC = () => {
     }
   };
   
-  // Add function to close details dialog
-  const handleCloseDetailsDialog = () => {
-    setDetailsDialogOpen(false);
-    setSelectedMaterialDetails(null);
-  };
-  
   return (
-    <FacultyLayout title="Course Materials Library">
+    <FacultyLayout title="Materials">
       <Container maxWidth="xl" sx={{ py: 4, px: { xs: 2, sm: 3, md: 4 } }}>
         {/* Header with controls */}
         <Box sx={{ 
@@ -646,10 +628,10 @@ const Materials: React.FC = () => {
                 mb: 1
               }}
             >
-              Course Materials Library
+              Course Materials
             </Typography>
             <Typography variant="subtitle1" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-              Browse and view learning materials for your courses
+              Manage and share learning materials with your students
             </Typography>
           </Box>
           
@@ -690,6 +672,23 @@ const Materials: React.FC = () => {
                 ),
               }}
             />
+            
+            <Button
+              variant="contained"
+              startIcon={<Add />}
+              onClick={handleUploadMaterial}
+              sx={{
+                borderRadius: 1,
+                textTransform: 'none',
+                fontWeight: 500,
+                bgcolor: theme.palette.secondary.main,
+                '&:hover': {
+                  bgcolor: alpha(theme.palette.secondary.main, 0.8)
+                }
+              }}
+            >
+              Add Material
+            </Button>
           </Box>
         </Box>
         
@@ -807,105 +806,111 @@ const Materials: React.FC = () => {
                   ? `No materials of type "${materialTypes.find(t => t.value === typeFilter)?.label}" found.`
                   : courseFilter !== 'all'
                     ? `No materials for the selected course found.`
-                    : 'No materials are available for viewing.'
+                    : 'You have not added any materials yet.'
               }
             </Typography>
             <Button
               variant="contained"
-              onClick={() => window.history.back()}
+              startIcon={<Add />}
+              onClick={handleUploadMaterial}
             >
-              Go Back
+              Add New Material
             </Button>
           </Paper>
         ) : (
-          <Grid container spacing={4}>
+          <Grid container spacing={3}>
             {filteredMaterials.map((material) => (
               <GridItem xs={12} sm={6} md={4} lg={3} key={material.id}>
                 <Card 
                   sx={{ 
-                    height: 340, // Increased height for bigger cards
+                    height: 280, // Fixed height for all cards
                     display: 'flex',
                     flexDirection: 'column',
-                    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                    backgroundColor: alpha(getMaterialColor(material.type || 'document'), 0.05),
                     backdropFilter: 'blur(10px)',
-                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    border: `1px solid ${alpha(getMaterialColor(material.type || 'document'), 0.2)}`,
                     borderRadius: 2,
                     transition: 'all 0.3s ease',
                     cursor: 'pointer',
-                    position: 'relative',
-                    overflow: 'hidden',
+                    position: 'relative', // For better positioning of elements
+                    overflow: 'hidden', // Ensure content doesn't overflow
+                    boxShadow: `0 4px 20px ${alpha('#000', 0.15)}`,
                     '&:hover': {
-                      transform: 'translateY(-6px)',
-                      boxShadow: '0 12px 28px rgba(0, 0, 0, 0.25)',
-                      backgroundColor: 'rgba(255, 255, 255, 0.12)',
-                      '& .material-icon-wrapper': {
-                        transform: 'scale(1.05)'
-                      }
+                      transform: 'translateY(-8px)',
+                      boxShadow: `0 12px 28px ${alpha(getMaterialColor(material.type || 'document'), 0.25)}`,
+                      borderColor: alpha(getMaterialColor(material.type || 'document'), 0.4)
                     },
-                    '&::before': {
+                    '&:before': {
                       content: '""',
                       position: 'absolute',
                       top: 0,
                       left: 0,
                       right: 0,
-                      height: '100%',
-                      background: `linear-gradient(135deg, ${alpha(getMaterialColor(material.type || 'document'), 0.2)} 0%, transparent 100%)`,
-                      zIndex: 0
+                      height: '4px',
+                      backgroundColor: getMaterialColor(material.type || 'document'),
+                      opacity: 0.8
                     }
                   }}
                   onClick={() => handleMaterialClick(material.id)}
                 >
                   <Box 
                     sx={{ 
-                      px: 3, // Increased padding
-                      pt: 3, // Increased padding
-                      pb: 2,
+                      p: 2, 
                       display: 'flex', 
-                      alignItems: 'flex-start',
-                      justifyContent: 'space-between',
-                      position: 'relative',
-                      zIndex: 1
+                      alignItems: 'center',
+                      borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
                     }}
                   >
                     <Box
-                      className="material-icon-wrapper"
                       sx={{
-                        width: 64, // Larger icon
-                        height: 64, // Larger icon
-                        borderRadius: 2,
+                        width: 40,
+                        height: 40,
+                        borderRadius: 1.5,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         backgroundColor: alpha(getMaterialColor(material.type || 'document'), 0.2),
-                        border: `1px solid ${alpha(getMaterialColor(material.type || 'document'), 0.3)}`,
                         color: getMaterialColor(material.type || 'document'),
-                        transition: 'transform 0.2s ease',
-                        boxShadow: `0 4px 12px ${alpha(getMaterialColor(material.type || 'document'), 0.3)}`
+                        mr: 2,
+                        boxShadow: `0 2px 8px ${alpha(getMaterialColor(material.type || 'document'), 0.3)}`
                       }}
                     >
-                      {React.cloneElement(getMaterialIcon(material.type || 'document'), { style: { fontSize: 32 } })}
+                      {getMaterialIcon(material.type || 'document')}
                     </Box>
-                    
-                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                    <Box sx={{ flexGrow: 1 }}>
                       <Chip
                         label={(material as ExtendedMaterial).courseName || material.course_name || getCourseNameById(material.courseId)}
                         size="small"
                         sx={{ 
-                          height: 24, // Slightly larger
-                          fontSize: '0.75rem',
+                          height: 20,
+                          fontSize: '0.65rem',
                           fontWeight: 600,
                           backgroundColor: alpha(getCourseColor(material.courseId), 0.3),
-                          color: 'rgba(255, 255, 255, 0.95)',
-                          backdropFilter: 'blur(4px)',
-                          border: `1px solid ${alpha(getCourseColor(material.courseId), 0.4)}`
+                          color: 'rgba(255, 255, 255, 0.9)',
+                          borderRadius: '10px'
                         }}
                       />
                     </Box>
+                    <IconButton 
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleMenuOpen(e, material.id);
+                      }}
+                      sx={{ 
+                        color: 'rgba(255, 255, 255, 0.7)',
+                        '&:hover': {
+                          color: 'rgba(255, 255, 255, 1)',
+                          backgroundColor: alpha(getMaterialColor(material.type || 'document'), 0.15)
+                        }
+                      }}
+                    >
+                      <MoreVert />
+                    </IconButton>
                   </Box>
-                  
-                  <CardContent sx={{ flexGrow: 1, px: 3, pt: 1.5, pb: 1.5, zIndex: 1 }}>
+                  <CardContent sx={{ flexGrow: 1, p: 2, display: 'flex', flexDirection: 'column' }}>
                     <Typography 
-                      variant="h6" // Larger text
+                      variant="subtitle1" 
                       component="h3" 
                       gutterBottom
                       sx={{ 
@@ -917,62 +922,57 @@ const Materials: React.FC = () => {
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
                         lineHeight: 1.3,
-                        mb: 1.5, // More spacing
-                        fontSize: '1.1rem' // Larger font
+                        mb: 1.5,
+                        fontSize: '1rem'
                       }}
                     >
                       {material.title}
                     </Typography>
-                    
                     {material.description && (
                       <Typography 
                         variant="body2" 
-                        color="rgba(255, 255, 255, 0.75)"
+                        color="rgba(255, 255, 255, 0.7)"
                         sx={{
                           display: '-webkit-box',
                           WebkitLineClamp: 3,
                           WebkitBoxOrient: 'vertical',
                           overflow: 'hidden',
                           textOverflow: 'ellipsis',
-                          mb: 1.5, // More spacing
-                          lineHeight: 1.5,
-                          fontSize: '0.9rem' // Larger font
+                          mb: 'auto',
+                          lineHeight: 1.5
                         }}
                       >
                         {material.description}
                       </Typography>
                     )}
-                  </CardContent>
-                  
-                  <Box 
-                    sx={{ 
-                      px: 3, 
-                      pb: 3, 
-                      pt: 1.5,
-                      display: 'flex', 
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      mt: 'auto',
-                      borderTop: '1px solid rgba(255, 255, 255, 0.08)',
-                      zIndex: 1
-                    }}
-                  >
-                    <Typography 
-                      variant="caption" 
+                    <Box 
                       sx={{ 
-                        color: 'rgba(255, 255, 255, 0.6)',
-                        display: 'flex',
+                        display: 'flex', 
                         alignItems: 'center',
-                        fontSize: '0.8rem' // Larger font
+                        mt: 2,
+                        pt: 1,
+                        borderTop: '1px dashed rgba(255, 255, 255, 0.1)'
                       }}
                     >
-                      {formatDate(material.updatedAt || material.createdAt)}
-                    </Typography>
-                    
+                      <Typography 
+                        variant="caption" 
+                        sx={{ 
+                          color: 'rgba(255, 255, 255, 0.5)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          fontSize: '0.7rem',
+                          fontStyle: 'italic'
+                        }}
+                      >
+                        {formatDate(material.updatedAt || material.createdAt)}
+                      </Typography>
+                    </Box>
+                  </CardContent>
+                  <CardActions sx={{ p: 2, pt: 0, justifyContent: 'flex-end' }}>
                     <Button 
                       size="small" 
                       variant="text"
-                      startIcon={<Search fontSize="small" />}
+                      startIcon={material.type === 'document' ? <Download /> : <LinkIcon />}
                       onClick={(e) => {
                         e.stopPropagation(); // Prevent triggering card click
                         handleMaterialClick(material.id);
@@ -981,15 +981,16 @@ const Materials: React.FC = () => {
                         color: getMaterialColor(material.type || 'document'),
                         textTransform: 'none',
                         fontWeight: 600,
-                        fontSize: '0.85rem', // Larger font
+                        borderRadius: 1.5,
+                        px: 2,
                         '&:hover': {
-                          backgroundColor: alpha(getMaterialColor(material.type || 'document'), 0.1)
+                          backgroundColor: alpha(getMaterialColor(material.type || 'document'), 0.15)
                         }
                       }}
                     >
-                      View Details
+                      {material.type === 'link' ? 'Open' : 'Download'}
                     </Button>
-                  </Box>
+                  </CardActions>
                 </Card>
               </GridItem>
             ))}
@@ -1015,278 +1016,23 @@ const Materials: React.FC = () => {
             }
           }}
         >
+          <MenuItem onClick={handleEditMaterial}>
+            <Edit sx={{ mr: 1, fontSize: 20 }} />
+            Edit
+          </MenuItem>
           <MenuItem onClick={handleDownloadMaterial}>
             <Download sx={{ mr: 1, fontSize: 20 }} />
             Download
           </MenuItem>
-          <MenuItem onClick={handleMaterialClick.bind(null, selectedMaterialId || 0)}>
-            <Search sx={{ mr: 1, fontSize: 20 }} />
-            View Details
+          <Divider sx={{ my: 1, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+          <MenuItem 
+            onClick={handleDeleteMaterial}
+            sx={{ color: theme.palette.error.main }}
+          >
+            <Delete sx={{ mr: 1, fontSize: 20 }} />
+            Delete
           </MenuItem>
         </Menu>
-        
-        {/* Material Details Dialog */}
-        <Dialog
-          open={detailsDialogOpen}
-          onClose={handleCloseDetailsDialog}
-          maxWidth="md"
-          fullWidth
-          PaperProps={{
-            sx: {
-              backgroundColor: '#1c2e4a',
-              backgroundImage: 'linear-gradient(135deg, #1c2e4a 0%, #0a1128 100%)',
-              color: '#fff',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              borderRadius: 2,
-              overflow: 'hidden'
-            }
-          }}
-        >
-          {selectedMaterialDetails && (
-            <>
-              <Box 
-                sx={{ 
-                  position: 'relative',
-                  p: 3,
-                  borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-                  backgroundImage: `linear-gradient(135deg, ${alpha(getMaterialColor(selectedMaterialDetails.type || 'document'), 0.2)} 0%, transparent 100%)`,
-                }}
-              >
-                <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 3 }}>
-                  <Box
-                    sx={{
-                      width: 80,
-                      height: 80,
-                      borderRadius: 2,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      backgroundColor: alpha(getMaterialColor(selectedMaterialDetails.type || 'document'), 0.2),
-                      border: `1px solid ${alpha(getMaterialColor(selectedMaterialDetails.type || 'document'), 0.3)}`,
-                      color: getMaterialColor(selectedMaterialDetails.type || 'document'),
-                      boxShadow: `0 4px 12px ${alpha(getMaterialColor(selectedMaterialDetails.type || 'document'), 0.3)}`
-                    }}
-                  >
-                    {React.cloneElement(getMaterialIcon(selectedMaterialDetails.type || 'document'), { style: { fontSize: 40 } })}
-                  </Box>
-                  
-                  <Box sx={{ flex: 1 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                      <Chip
-                        label={(selectedMaterialDetails as ExtendedMaterial).courseName || 
-                          selectedMaterialDetails.course_name || 
-                          getCourseNameById(selectedMaterialDetails.courseId)}
-                        size="small"
-                        sx={{ 
-                          height: 24,
-                          fontSize: '0.75rem',
-                          fontWeight: 600,
-                          backgroundColor: alpha(getCourseColor(selectedMaterialDetails.courseId), 0.3),
-                          color: 'rgba(255, 255, 255, 0.95)',
-                          mr: 1,
-                          backdropFilter: 'blur(4px)',
-                          border: `1px solid ${alpha(getCourseColor(selectedMaterialDetails.courseId), 0.4)}`
-                        }}
-                      />
-                      
-                      <Chip
-                        label={selectedMaterialDetails.type || 'document'}
-                        size="small"
-                        sx={{ 
-                          height: 24,
-                          fontSize: '0.75rem',
-                          fontWeight: 600,
-                          backgroundColor: alpha(getMaterialColor(selectedMaterialDetails.type || 'document'), 0.2),
-                          color: getMaterialColor(selectedMaterialDetails.type || 'document'),
-                          textTransform: 'capitalize'
-                        }}
-                      />
-                      
-                      <Box sx={{ flexGrow: 1 }} />
-                      
-                      <IconButton
-                        aria-label="close"
-                        onClick={handleCloseDetailsDialog}
-                        sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
-                      >
-                        <Close fontSize="small" />
-                      </IconButton>
-                    </Box>
-                    
-                    <Typography variant="h5" component="h2" gutterBottom sx={{ fontWeight: 600, color: '#fff' }}>
-                      {selectedMaterialDetails.title}
-                    </Typography>
-                    
-                    <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.6)' }}>
-                      Last updated: {formatDate(selectedMaterialDetails.updatedAt || selectedMaterialDetails.createdAt)}
-                    </Typography>
-                  </Box>
-                </Box>
-              </Box>
-              
-              <DialogContent sx={{ p: 3 }}>
-                <Typography variant="h6" sx={{ mb: 2, fontWeight: 500, color: 'rgba(255, 255, 255, 0.9)' }}>
-                  Description
-                </Typography>
-                
-                <Paper
-                  elevation={0}
-                  sx={{
-                    p: 3,
-                    mb: 3,
-                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: 2
-                  }}
-                >
-                  {selectedMaterialDetails.description ? (
-                    <Typography variant="body1" sx={{ color: 'rgba(255, 255, 255, 0.8)', whiteSpace: 'pre-line' }}>
-                      {selectedMaterialDetails.description}
-                    </Typography>
-                  ) : (
-                    <Typography variant="body1" sx={{ color: 'rgba(255, 255, 255, 0.5)', fontStyle: 'italic' }}>
-                      No description provided for this material.
-                    </Typography>
-                  )}
-                </Paper>
-                
-                <Typography variant="h6" sx={{ mb: 2, fontWeight: 500, color: 'rgba(255, 255, 255, 0.9)' }}>
-                  Material Details
-                </Typography>
-                
-                <Grid container spacing={3}>
-                  <GridItem xs={12} md={6}>
-                    <Paper
-                      elevation={0}
-                      sx={{
-                        p: 2.5,
-                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                        borderRadius: 2
-                      }}
-                    >
-                      <Box sx={{ display: 'flex', mb: 1.5 }}>
-                        <Typography variant="body2" sx={{ width: 100, color: 'rgba(255, 255, 255, 0.6)' }}>
-                          Type:
-                        </Typography>
-                        <Typography variant="body2" sx={{ fontWeight: 500, color: 'rgba(255, 255, 255, 0.9)', textTransform: 'capitalize' }}>
-                          {selectedMaterialDetails.type || 'Document'}
-                        </Typography>
-                      </Box>
-                      
-                      <Box sx={{ display: 'flex', mb: 1.5 }}>
-                        <Typography variant="body2" sx={{ width: 100, color: 'rgba(255, 255, 255, 0.6)' }}>
-                          Course:
-                        </Typography>
-                        <Typography variant="body2" sx={{ fontWeight: 500, color: 'rgba(255, 255, 255, 0.9)' }}>
-                          {(selectedMaterialDetails as ExtendedMaterial).courseName || 
-                            selectedMaterialDetails.course_name || 
-                            getCourseNameById(selectedMaterialDetails.courseId)}
-                        </Typography>
-                      </Box>
-                      
-                      {selectedMaterialDetails.fileType && (
-                        <Box sx={{ display: 'flex', mb: 1.5 }}>
-                          <Typography variant="body2" sx={{ width: 100, color: 'rgba(255, 255, 255, 0.6)' }}>
-                            File Format:
-                          </Typography>
-                          <Typography variant="body2" sx={{ fontWeight: 500, color: 'rgba(255, 255, 255, 0.9)' }}>
-                            {selectedMaterialDetails.fileType}
-                          </Typography>
-                        </Box>
-                      )}
-                      
-                      <Box sx={{ display: 'flex' }}>
-                        <Typography variant="body2" sx={{ width: 100, color: 'rgba(255, 255, 255, 0.6)' }}>
-                          Added:
-                        </Typography>
-                        <Typography variant="body2" sx={{ fontWeight: 500, color: 'rgba(255, 255, 255, 0.9)' }}>
-                          {formatDate(selectedMaterialDetails.createdAt)}
-                        </Typography>
-                      </Box>
-                    </Paper>
-                  </GridItem>
-                  
-                  <GridItem xs={12} md={6}>
-                    <Paper
-                      elevation={0}
-                      sx={{
-                        p: 2.5,
-                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                        borderRadius: 2,
-                        height: '100%',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'center',
-                        alignItems: 'center'
-                      }}
-                    >
-                      <Box
-                        sx={{
-                          width: 64,
-                          height: 64,
-                          borderRadius: '50%',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          backgroundColor: alpha(getMaterialColor(selectedMaterialDetails.type || 'document'), 0.1),
-                          color: getMaterialColor(selectedMaterialDetails.type || 'document'),
-                          mb: 2
-                        }}
-                      >
-                        {selectedMaterialDetails.type === 'link' ? <LinkIcon fontSize="large" /> : <Download fontSize="large" />}
-                      </Box>
-                      
-                      <Button
-                        variant="contained"
-                        size="large"
-                        startIcon={selectedMaterialDetails.type === 'link' ? <LinkIcon /> : <Download />}
-                        onClick={handleDownloadFromDetails}
-                        sx={{
-                          backgroundColor: getMaterialColor(selectedMaterialDetails.type || 'document'),
-                          '&:hover': {
-                            backgroundColor: alpha(getMaterialColor(selectedMaterialDetails.type || 'document'), 0.8)
-                          },
-                          px: 3,
-                          py: 1,
-                          borderRadius: 2
-                        }}
-                      >
-                        {selectedMaterialDetails.type === 'link' ? 'Open Link' : 'Download File'}
-                      </Button>
-                      
-                      <Typography variant="caption" sx={{ mt: 2, color: 'rgba(255, 255, 255, 0.5)', textAlign: 'center' }}>
-                        {selectedMaterialDetails.type === 'link' ? 
-                          'This will open the link in a new tab' : 
-                          'The file will be downloaded to your device'}
-                      </Typography>
-                    </Paper>
-                  </GridItem>
-                </Grid>
-              </DialogContent>
-              
-              <DialogActions sx={{ p: 3, pt: 0 }}>
-                <Button onClick={handleCloseDetailsDialog} color="inherit" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-                  Close
-                </Button>
-                <Button
-                  variant="contained"
-                  startIcon={selectedMaterialDetails.type === 'link' ? <LinkIcon /> : <Download />}
-                  onClick={handleDownloadFromDetails}
-                  sx={{
-                    backgroundColor: getMaterialColor(selectedMaterialDetails.type || 'document'),
-                    '&:hover': {
-                      backgroundColor: alpha(getMaterialColor(selectedMaterialDetails.type || 'document'), 0.8)
-                    }
-                  }}
-                >
-                  {selectedMaterialDetails.type === 'link' ? 'Open Link' : 'Download File'}
-                </Button>
-              </DialogActions>
-            </>
-          )}
-        </Dialog>
         
         {/* Upload Material Dialog */}
         <Dialog

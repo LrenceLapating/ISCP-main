@@ -13,10 +13,33 @@ import {
   ArrowBack, Grading, Download, Check,
   CheckCircle, Warning, 
   AssignmentOutlined, CloudDownload,
-  Grade
+  Grade, Visibility
 } from '@mui/icons-material';
 import facultyService, { Assignment as ServiceAssignment, AssignmentSubmission } from '../../services/FacultyService';
 import { format, formatDistance } from 'date-fns';
+
+// Function to download file
+const downloadFile = (fileUrl: string | undefined, fileName: string) => {
+  if (!fileUrl) return;
+  
+  // Create anchor element
+  const link = document.createElement('a');
+  // Set properties
+  link.href = `http://localhost:5000${fileUrl}`;
+  link.download = fileName || 'submission-file';
+  // Append to body
+  document.body.appendChild(link);
+  // Trigger click event
+  link.click();
+  // Clean up
+  document.body.removeChild(link);
+};
+
+// Function to view file in new tab
+const viewFile = (fileUrl: string | undefined) => {
+  if (!fileUrl) return;
+  window.open(`http://localhost:5000${fileUrl}`, '_blank');
+};
 
 // Extend the AssignmentSubmission interface to ensure compatibility
 interface StudentSubmission extends Omit<AssignmentSubmission, 'studentName'> {
@@ -468,9 +491,20 @@ const AssignmentSubmissions: React.FC = () => {
                                   <IconButton 
                                     size="small" 
                                     sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
-                                    onClick={() => window.open(`http://localhost:5000${submission.fileUrl}`, '_blank')}
+                                    onClick={() => downloadFile(submission.fileUrl, submission.studentName)}
                                   >
                                     <CloudDownload />
+                                  </IconButton>
+                                </Tooltip>
+                              )}
+                              {submission.fileUrl && (
+                                <Tooltip title="View Submission">
+                                  <IconButton 
+                                    size="small" 
+                                    sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
+                                    onClick={() => viewFile(submission.fileUrl)}
+                                  >
+                                    <Visibility />
                                   </IconButton>
                                 </Tooltip>
                               )}
@@ -546,23 +580,40 @@ const AssignmentSubmissions: React.FC = () => {
                 </Box>
                 
                 {selectedSubmission.fileUrl && (
-                  <Button 
-                    variant="outlined" 
-                    size="small" 
-                    startIcon={<CloudDownload />}
-                    sx={{ 
-                      mt: 1, 
-                      color: 'rgba(255, 255, 255, 0.7)',
-                      borderColor: 'rgba(255, 255, 255, 0.2)',
-                      '&:hover': {
-                        borderColor: 'rgba(255, 255, 255, 0.3)',
-                        bgcolor: 'rgba(255, 255, 255, 0.05)'
-                      }
-                    }}
-                    onClick={() => window.open(`http://localhost:5000${selectedSubmission.fileUrl}`, '_blank')}
-                  >
-                    Download Submission
-                  </Button>
+                  <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
+                    <Button 
+                      variant="outlined" 
+                      size="small" 
+                      startIcon={<CloudDownload />}
+                      sx={{ 
+                        color: 'rgba(255, 255, 255, 0.7)',
+                        borderColor: 'rgba(255, 255, 255, 0.2)',
+                        '&:hover': {
+                          borderColor: 'rgba(255, 255, 255, 0.3)',
+                          bgcolor: 'rgba(255, 255, 255, 0.05)'
+                        }
+                      }}
+                      onClick={() => downloadFile(selectedSubmission.fileUrl, selectedSubmission.studentName)}
+                    >
+                      Download Submission
+                    </Button>
+                    <Button 
+                      variant="outlined" 
+                      size="small" 
+                      startIcon={<Visibility />}
+                      sx={{ 
+                        color: 'rgba(255, 255, 255, 0.7)',
+                        borderColor: 'rgba(255, 255, 255, 0.2)',
+                        '&:hover': {
+                          borderColor: 'rgba(255, 255, 255, 0.3)',
+                          bgcolor: 'rgba(255, 255, 255, 0.05)'
+                        }
+                      }}
+                      onClick={() => viewFile(selectedSubmission.fileUrl)}
+                    >
+                      View Submission
+                    </Button>
+                  </Box>
                 )}
               </Box>
               

@@ -231,10 +231,14 @@ const availablePermissions: Permission[] = [
   }
 ];
 
-// Sample campus data
+// Campus options for filter
 const campuses = [
-  'All Campuses', 'Main Campus', 'Biniliran Campus', 'Galactic Campus', 
-  'Luna Campus', 'Solar Campus', 'Atlantic Campus'
+  'All Campuses',
+  'Main Campus: Undisclosed location, Philippines',
+  'Biringan Campus',
+  'Sun and Moon Campus',
+  'Galactic Campus',
+  'Atlantis Campus'
 ];
 
 const RoleManagement: React.FC = () => {

@@ -64,6 +64,107 @@ const Dashboard: React.FC = () => {
   const [profileImageUrl, setProfileImageUrl] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(true);
 
+  // Get welcome message translation
+  const getWelcomeMessage = () => {
+    const name = firstName || (language === 'English' ? 'Student' : 
+                language === 'Greek' ? 'Φοιτητή' : 
+                language === 'Arabic' ? 'طالب' : 
+                language === 'Waray' ? 'Estudyante' : 'Estudyante');
+
+    switch(language) {
+      case 'Greek':
+        return `Καλώς ήρθατε, ${firstName || 'Φοιτητή'}`;
+      case 'Filipino':
+        return `Maligayang pagdating, ${firstName || 'Estudyante'}`;
+      case 'Waray':
+        return `Maupay nga pag-abot, ${firstName || 'Estudyante'}`;
+      case 'Arabic':
+        return `مرحبًا، ${firstName || 'طالب'}`;
+      default:
+        return `Welcome, ${firstName || 'Student'}`;
+    }
+  };
+
+  // Function to get localized card text
+  const getLocalizedText = (key: string) => {
+    switch(key) {
+      case 'courses':
+        return language === 'English' ? 'Courses' : 
+              language === 'Greek' ? 'Μαθήματα' : 
+              language === 'Filipino' ? 'Mga Kurso' : 
+              language === 'Waray' ? 'Mga Kurso' : 
+              language === 'Arabic' ? 'الدورات' : 'Courses';
+      case 'assignments':
+        return language === 'English' ? 'Assignments' : 
+              language === 'Greek' ? 'Εργασίες' : 
+              language === 'Filipino' ? 'Mga Takdang-aralin' : 
+              language === 'Waray' ? 'Mga Buruhatun' : 
+              language === 'Arabic' ? 'الواجبات' : 'Assignments';
+      case 'viewAll':
+        return language === 'English' ? 'View all' : 
+              language === 'Greek' ? 'Προβολή όλων' : 
+              language === 'Filipino' ? 'Tingnan lahat' : 
+              language === 'Waray' ? 'Kitaa ngatanan' : 
+              language === 'Arabic' ? 'عرض الكل' : 'View all';
+      case 'details':
+        return language === 'English' ? 'Details' : 
+              language === 'Greek' ? 'Λεπτομέρειες' : 
+              language === 'Filipino' ? 'Mga Detalye' : 
+              language === 'Waray' ? 'Mga Detalye' : 
+              language === 'Arabic' ? 'التفاصيل' : 'Details';
+      case 'messages':
+        return language === 'English' ? 'Messages' : 
+              language === 'Greek' ? 'Μηνύματα' : 
+              language === 'Filipino' ? 'Mga Mensahe' : 
+              language === 'Waray' ? 'Mga Mensahe' : 
+              language === 'Arabic' ? 'الرسائل' : 'Messages';
+      case 'upcoming':
+        return language === 'English' ? 'Upcoming Assignments' : 
+              language === 'Greek' ? 'Επερχόμενες Εργασίες' : 
+              language === 'Filipino' ? 'Mga Darating na Takdang-aralin' : 
+              language === 'Waray' ? 'Darating nga mga Buruhatun' : 
+              language === 'Arabic' ? 'الواجبات القادمة' : 'Upcoming Assignments';
+      case 'noAssignments':
+        return language === 'English' ? 'No upcoming assignments' : 
+              language === 'Greek' ? 'Δεν υπάρχουν επερχόμενες εργασίες' : 
+              language === 'Filipino' ? 'Walang darating na takdang-aralin' : 
+              language === 'Waray' ? 'Waray darating nga mga buruhatun' : 
+              language === 'Arabic' ? 'لا توجد واجبات قادمة' : 'No upcoming assignments';
+      case 'announcements':
+        return language === 'English' ? 'Announcements' : 
+              language === 'Greek' ? 'Ανακοινώσεις' : 
+              language === 'Filipino' ? 'Mga Anunsyo' : 
+              language === 'Waray' ? 'Mga Anunsyo' : 
+              language === 'Arabic' ? 'الإعلانات' : 'Announcements';
+      case 'noAnnouncements':
+        return language === 'English' ? 'No announcements' : 
+              language === 'Greek' ? 'Δεν υπάρχουν ανακοινώσεις' : 
+              language === 'Filipino' ? 'Walang mga anunsyo' : 
+              language === 'Waray' ? 'Waray mga anunsyo' : 
+              language === 'Arabic' ? 'لا توجد إعلانات' : 'No announcements';
+      case 'readMore':
+        return language === 'English' ? 'Read more' : 
+              language === 'Greek' ? 'Διαβάστε περισσότερα' : 
+              language === 'Filipino' ? 'Magbasa pa' : 
+              language === 'Waray' ? 'Magbasa pa' : 
+              language === 'Arabic' ? 'قراءة المزيد' : 'Read more';
+      case 'important':
+        return language === 'English' ? 'Important' : 
+              language === 'Greek' ? 'Σημαντικό' : 
+              language === 'Filipino' ? 'Mahalaga' : 
+              language === 'Waray' ? 'Importante' : 
+              language === 'Arabic' ? 'مهم' : 'Important';
+      case 'due':
+        return language === 'English' ? 'Due' : 
+              language === 'Greek' ? 'Προθεσμία' : 
+              language === 'Filipino' ? 'Hanggang' : 
+              language === 'Waray' ? 'Katapusan' : 
+              language === 'Arabic' ? 'الموعد النهائي' : 'Due';
+      default:
+        return key;
+    }
+  };
+
   // Function to check if a URL is a data URL
   const isDataUrl = (url: string): boolean => {
     return url?.startsWith('data:image/');
@@ -80,6 +181,62 @@ const Dashboard: React.FC = () => {
     
     // Otherwise, prepend the API base URL
     return `http://localhost:5000${url}`;
+  };
+
+  // Calculate grade percentage - same helper function as in Grades.tsx
+  const calculateGradePercentage = (assignments: Array<{ score: number | null, total: number, weight: number }>) => {
+    let totalWeightedScore = 0;
+    let totalWeight = 0;
+    
+    assignments.forEach(assignment => {
+      if (assignment.score !== null) {
+        totalWeightedScore += (assignment.score / assignment.total) * assignment.weight;
+        totalWeight += assignment.weight;
+      }
+    });
+    
+    return totalWeight > 0 ? (totalWeightedScore / totalWeight) * 100 : 0;
+  };
+
+  // Get real GPA data
+  const getGpaData = async () => {
+    try {
+      const grades = await studentService.getGradesFromAPI();
+      
+      // Filter for current term grades - using exactly the same approach as in Grades.tsx
+      const currentTermGrades = grades.filter(grade => grade.term === 'Spring 2023');
+      
+      // Calculate GPA using the same logic as in Grades.tsx
+      let totalPoints = 0;
+      let totalCredits = 0;
+      
+      currentTermGrades.forEach((grade) => {
+        const percentage = calculateGradePercentage(grade.assignments);
+        if (percentage > 0) {
+          let gradePoints;
+          if (percentage >= 90) gradePoints = 4.0;
+          else if (percentage >= 87) gradePoints = 3.7;
+          else if (percentage >= 83) gradePoints = 3.3;
+          else if (percentage >= 80) gradePoints = 3.0;
+          else if (percentage >= 77) gradePoints = 2.7;
+          else if (percentage >= 73) gradePoints = 2.3;
+          else if (percentage >= 70) gradePoints = 2.0;
+          else if (percentage >= 67) gradePoints = 1.7;
+          else if (percentage >= 63) gradePoints = 1.3;
+          else if (percentage >= 60) gradePoints = 1.0;
+          else gradePoints = 0.0;
+          
+          totalPoints += gradePoints * grade.course.credits;
+          totalCredits += grade.course.credits;
+        }
+      });
+      
+      const gpaValue = totalCredits > 0 ? Number((totalPoints / totalCredits).toFixed(2)) : 0;
+      setGpa(gpaValue);
+    } catch (error) {
+      console.error('Error fetching GPA:', error);
+      setGpa(0);
+    }
   };
 
   // Get real assignment progress data
@@ -114,19 +271,6 @@ const Dashboard: React.FC = () => {
     } catch (error) {
       console.error('Error fetching courses:', error);
       setCourseCount(0);
-    }
-  };
-
-  // Get real GPA data
-  const getGpaData = async () => {
-    try {
-      const grades = await studentService.getGradesFromAPI();
-      // If API call succeeds, use calculated GPA
-      const gpaValue = studentService.calculateGPA();
-      setGpa(gpaValue);
-    } catch (error) {
-      console.error('Error fetching GPA:', error);
-      setGpa(0);
     }
   };
 
@@ -235,9 +379,7 @@ const Dashboard: React.FC = () => {
     <StudentLayout title={t('dashboard')}>
       <Box sx={{ py: 3 }}>
         <Typography variant="h5" component="h1" fontWeight="bold" mb={3}>
-          {language === 'English' ? 
-            `Welcome, ${firstName || 'Student'}` : 
-            `Maligayang pagdating, ${firstName || 'Estudyante'}`}
+          {getWelcomeMessage()}
         </Typography>
         
         {/* Quick Stats */}
@@ -257,7 +399,7 @@ const Dashboard: React.FC = () => {
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                 <LibraryBooks sx={{ color: theme.palette.primary.main, mr: 1 }} />
                 <Typography variant="h6" color="white">
-                  {language === 'English' ? 'Courses' : 'Mga Kurso'}
+                  {getLocalizedText('courses')}
                 </Typography>
               </Box>
               <Typography variant="h4" component="div" fontWeight="bold" color="white">
@@ -271,7 +413,7 @@ const Dashboard: React.FC = () => {
                   endIcon={<ChevronRight />}
                   sx={{ textTransform: 'none', ml: 'auto' }}
                 >
-                  {language === 'English' ? 'View all' : 'Tingnan lahat'}
+                  {getLocalizedText('viewAll')}
                 </Button>
               </Box>
             </Paper>
@@ -292,7 +434,7 @@ const Dashboard: React.FC = () => {
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                 <Assignment sx={{ color: theme.palette.error.main, mr: 1 }} />
                 <Typography variant="h6" color="white">
-                  {language === 'English' ? 'Assignments' : 'Mga Takdang-aralin'}
+                  {getLocalizedText('assignments')}
                 </Typography>
               </Box>
               <Typography variant="h4" component="div" fontWeight="bold" color="white">
@@ -306,7 +448,7 @@ const Dashboard: React.FC = () => {
                   endIcon={<ChevronRight />}
                   sx={{ textTransform: 'none', ml: 'auto' }}
                 >
-                  {language === 'English' ? 'View all' : 'Tingnan lahat'}
+                  {getLocalizedText('viewAll')}
                 </Button>
               </Box>
             </Paper>
@@ -341,7 +483,7 @@ const Dashboard: React.FC = () => {
                   endIcon={<ChevronRight />}
                   sx={{ textTransform: 'none', ml: 'auto' }}
                 >
-                  {language === 'English' ? 'Details' : 'Mga Detalye'}
+                  {getLocalizedText('details')}
                 </Button>
               </Box>
             </Paper>
@@ -362,7 +504,7 @@ const Dashboard: React.FC = () => {
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                 <Email sx={{ color: theme.palette.warning.main, mr: 1 }} />
                 <Typography variant="h6" color="white">
-                  {language === 'English' ? 'Messages' : 'Mga Mensahe'}
+                  {getLocalizedText('messages')}
                 </Typography>
                 {unreadMessageCount > 0 && (
                   <Box
@@ -445,7 +587,7 @@ const Dashboard: React.FC = () => {
           {/* Upcoming Assignments */}
           <Box sx={{ gridColumn: { xs: 'span 12', md: 'span 8' } }}>
             <Typography variant="h6" component="h2" fontWeight="bold" mb={2} color="white">
-              {language === 'English' ? 'Upcoming Assignments' : 'Darating na Mga Takdang-aralin'}
+              {getLocalizedText('upcoming')}
             </Typography>
             <Paper
               sx={{
@@ -481,7 +623,7 @@ const Dashboard: React.FC = () => {
                             {assignment.title}
                           </Typography>
                           <Chip 
-                            label={language === 'English' ? `Due ${assignment.dueDate}` : `Hanggang ${assignment.dueDate}`} 
+                            label={`${getLocalizedText('due')} ${assignment.dueDate}`} 
                             size="small" 
                             color="primary"
                             variant="outlined"
@@ -520,7 +662,7 @@ const Dashboard: React.FC = () => {
               ) : (
                 <Box sx={{ p: 3, textAlign: 'center' }}>
                   <Typography color="textSecondary" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-                    {language === 'English' ? 'No upcoming assignments' : 'Walang darating na mga takdang-aralin'}
+                    {getLocalizedText('noAssignments')}
                   </Typography>
                 </Box>
               )}
@@ -528,7 +670,7 @@ const Dashboard: React.FC = () => {
             
             {/* Announcements */}
             <Typography variant="h6" component="h2" fontWeight="bold" mb={2} color="white">
-              {language === 'English' ? 'Announcements' : 'Mga Anunsyo'}
+              {getLocalizedText('announcements')}
             </Typography>
             <Paper
               sx={{
@@ -565,7 +707,7 @@ const Dashboard: React.FC = () => {
                               </Typography>
                               {announcement.important && (
                                 <Chip 
-                                  label={language === 'English' ? 'Important' : 'Mahalaga'} 
+                                  label={getLocalizedText('important')} 
                                   size="small" 
                                   color="warning"
                                   sx={{ ml: 1 }}
@@ -590,7 +732,7 @@ const Dashboard: React.FC = () => {
                                   {announcement.date} • {announcement.campus}
                                 </Typography>
                                 <Button size="small" sx={{ ml: 'auto', textTransform: 'none' }}>
-                                  {language === 'English' ? 'Read more' : 'Magbasa pa'}
+                                  {getLocalizedText('readMore')}
                                 </Button>
                               </Box>
                             </React.Fragment>
@@ -606,7 +748,7 @@ const Dashboard: React.FC = () => {
               ) : (
                 <Box sx={{ p: 3, textAlign: 'center' }}>
                   <Typography color="textSecondary" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-                    {language === 'English' ? 'No announcements' : 'Walang mga anunsyo'}
+                    {getLocalizedText('noAnnouncements')}
                   </Typography>
                 </Box>
               )}

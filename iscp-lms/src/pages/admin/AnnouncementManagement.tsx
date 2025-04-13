@@ -693,11 +693,11 @@ const AnnouncementManagement: React.FC = () => {
                   sx={{ color: 'white' }}
                 >
                   <MenuItem value="All Campuses">All Campuses</MenuItem>
+                  <MenuItem value="Main Campus: Undisclosed location, Philippines">Main Campus: Undisclosed location, Philippines</MenuItem>
                   <MenuItem value="Biringan Campus">Biringan Campus</MenuItem>
-                  <MenuItem value="Wakanda Campus">Wakanda Campus</MenuItem>
+                  <MenuItem value="Sun and Moon Campus">Sun and Moon Campus</MenuItem>
+                  <MenuItem value="Galactic Campus">Galactic Campus</MenuItem>
                   <MenuItem value="Atlantis Campus">Atlantis Campus</MenuItem>
-                  <MenuItem value="El Dorado Campus">El Dorado Campus</MenuItem>
-                  <MenuItem value="Asgard Campus">Asgard Campus</MenuItem>
                 </Select>
               </FormControl>
             </Box>

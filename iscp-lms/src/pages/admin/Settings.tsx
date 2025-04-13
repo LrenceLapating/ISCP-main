@@ -101,7 +101,7 @@ function TabPanel(props: TabPanelProps) {
 const Settings: React.FC = () => {
   const { authState, updateUserProfile } = useAuth();
   const { mode, setThemeMode } = useTheme();
-  const { language, setLanguage } = useLanguage();
+  const { language, setLanguage, getAvailableLanguages, t } = useLanguage();
   const [tabValue, setTabValue] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -572,7 +572,7 @@ const Settings: React.FC = () => {
   };
 
   // Add a function to update language
-  const handleLanguageChange = (newLanguage: 'English' | 'Filipino') => {
+  const handleLanguageChange = (newLanguage: string) => {
     // Update UI state
     setProfile({
       ...profile,
@@ -583,7 +583,7 @@ const Settings: React.FC = () => {
     });
     
     // Apply language change immediately
-    setLanguage(newLanguage);
+    setLanguage(newLanguage as any);
   };
 
   // Add a function to update privacy settings
@@ -1262,35 +1262,30 @@ const Settings: React.FC = () => {
                         <Language sx={{ color: 'rgba(255, 255, 255, 0.7)' }} />
                       </ListItemIcon>
                       <ListItemText 
-                        primary="Language" 
-                        secondary="Select your preferred language"
+                        primary={t('language')}
+                        secondary={t('languageDescription')} 
                         primaryTypographyProps={{ color: '#fff' }}
                         secondaryTypographyProps={{ color: 'rgba(255, 255, 255, 0.7)' }}
                       />
                       <ListItemSecondaryAction>
-                        <Button 
-                          variant={profile.preferences.language === 'English' ? 'contained' : 'outlined'}
-                          size="small"
-                          onClick={() => handleLanguageChange('English')}
-                          sx={{ mr: 1, minWidth: 100 }}
-                        >
-                          English
-                        </Button>
-                        <Button 
-                          variant={profile.preferences.language === 'Filipino' ? 'contained' : 'outlined'}
-                          size="small"
-                          onClick={() => handleLanguageChange('Filipino')}
-                          sx={{ minWidth: 100 }}
-                        >
-                          Filipino
-                        </Button>
+                        {getAvailableLanguages(profile.campus).map((lang) => (
+                          <Button 
+                            key={lang}
+                            variant={profile.preferences.language === lang ? 'contained' : 'outlined'}
+                            size="small"
+                            onClick={() => handleLanguageChange(lang)}
+                            sx={{ mr: 1, minWidth: 100 }}
+                          >
+                            {lang}
+                          </Button>
+                        ))}
                       </ListItemSecondaryAction>
                     </ListItem>
                     
                     <Divider sx={{ my: 2, bgcolor: 'rgba(255, 255, 255, 0.1)' }} />
                     
                     <Typography variant="subtitle2" gutterBottom sx={{ color: '#fff', fontWeight: 600, px: 2 }}>
-                      Privacy Settings
+                      {t('privacySettings')}
                     </Typography>
                     
                     <ListItem>

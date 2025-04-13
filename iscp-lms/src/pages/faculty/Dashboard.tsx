@@ -82,23 +82,37 @@ const Dashboard: React.FC = () => {
         const notificationData = await facultyService.getNotifications();
         setNotifications(notificationData.slice(0, 5)); // Only show the 5 most recent
         
-        // Fetch courses data
-        const coursesData = await facultyService.getMyCourses();
-        setCourses(coursesData);
+        // Fetch courses data - MODIFIED to only include available courses
+        const allCoursesData = await facultyService.getMyCourses();
+        // Filter to only include available courses (not pending requests)
+        const availableCoursesData = allCoursesData.filter(course => 
+          !course.request_status || course.request_status !== 'pending' && course.request_status !== 'rejected'
+        );
+        setCourses(availableCoursesData);
         
         // Fetch students data directly from the students API
         const studentsData = await facultyService.getAllStudents();
         const actualStudentCount = studentsData.length;
         
-        // Hardcode materials count to 3 based on the screenshot
-        const materialsCount = 3;
+        // Fetch materials from all courses (similar to the Materials page)
+        let allMaterials = [];
+        for (const course of availableCoursesData) {
+          try {
+            const courseMaterials = await facultyService.getCourseMaterials(course.id);
+            allMaterials.push(...courseMaterials);
+          } catch (error) {
+            console.error(`Error fetching materials for course ${course.id}:`, error);
+          }
+        }
+        // Calculate the actual materials count
+        const materialsCount = allMaterials.length;
         
         // Calculate stats from real data
-        const creditHours = coursesData.reduce((total, course) => total + (course.credits || 0), 0);
+        const creditHours = availableCoursesData.reduce((total, course) => total + (course.credits || 0), 0);
         
         // Fetch pending tasks (assignments that need grading)
         let pendingTasks = 0;
-        for (const course of coursesData) {
+        for (const course of availableCoursesData) {
           const assignments = await facultyService.getCourseAssignments(course.id);
           pendingTasks += assignments.reduce((count, assignment) => {
             const ungraded = (assignment.submissions_count || 0) - (assignment.graded_count || 0);
@@ -106,14 +120,14 @@ const Dashboard: React.FC = () => {
           }, 0);
         }
         
-        // Save calculated stats with the actual student count
+        // Save calculated stats with the actual student count and materials count
         setStats({
-          courses: coursesData.length,
+          courses: availableCoursesData.length,
           totalStudents: actualStudentCount,
           pendingTasks,
           inquiries: 12, // This could be fetched from a messages API
           creditHours: creditHours,
-          materials: materialsCount, // Use correct materials count
+          materials: materialsCount, // Use the actual materials count
           newStudents: actualStudentCount > 0 ? Math.min(actualStudentCount, 2) : 0 // Consider 2 students as new if we have students
         });
       } catch (error) {
@@ -159,6 +173,97 @@ const Dashboard: React.FC = () => {
 
   const handleNavigateToMessages = () => {
     navigate('/faculty/messages');
+  };
+
+  // Get welcome message translation
+  const getWelcomeMessage = () => {
+    const name = user?.fullName?.split(' ')[0] || (
+      language === 'English' ? 'Professor' : 
+      language === 'Greek' ? 'Καθηγητή' : 
+      language === 'Arabic' ? 'أستاذ' : 
+      language === 'Waray' ? 'Propesor' : 'Propesor'
+    );
+
+    switch(language) {
+      case 'Greek':
+        return `Καλώς επιστρέψατε, ${name}`;
+      case 'Filipino':
+        return `Maligayang pagbabalik, ${name}`;
+      case 'Waray':
+        return `Maupay nga pagbalik, ${name}`;
+      case 'Arabic':
+        return `مرحبًا بعودتك، ${name}`;
+      default:
+        return `Welcome back, ${name}`;
+    }
+  };
+
+  // Function to get localized card text
+  const getLocalizedText = (key: string) => {
+    switch(key) {
+      case 'courses':
+        return language === 'English' ? 'Courses' : 
+              language === 'Greek' ? 'Μαθήματα' : 
+              language === 'Filipino' ? 'Mga Kurso' : 
+              language === 'Waray' ? 'Mga Kurso' : 
+              language === 'Arabic' ? 'الدورات' : 'Courses';
+      case 'activeCourses':
+        return language === 'English' ? 'Active Courses' : 
+              language === 'Greek' ? 'Ενεργά Μαθήματα' : 
+              language === 'Filipino' ? 'Mga Aktibong Kurso' : 
+              language === 'Waray' ? 'Mga Aktibo nga Kurso' : 
+              language === 'Arabic' ? 'الدورات النشطة' : 'Active Courses';
+      case 'students':
+        return language === 'English' ? 'Students' : 
+              language === 'Greek' ? 'Φοιτητές' : 
+              language === 'Filipino' ? 'Mga Estudyante' : 
+              language === 'Waray' ? 'Mga Estudyante' : 
+              language === 'Arabic' ? 'الطلاب' : 'Students';
+      case 'enrolledStudents':
+        return language === 'English' ? 'Enrolled Students' : 
+              language === 'Greek' ? 'Εγγεγραμμένοι Φοιτητές' : 
+              language === 'Filipino' ? 'Mga Naka-enroll na Estudyante' : 
+              language === 'Waray' ? 'Mga Naka-enroll nga Estudyante' : 
+              language === 'Arabic' ? 'الطلاب المسجلين' : 'Enrolled Students';
+      case 'assignments':
+        return language === 'English' ? 'Assignments' : 
+              language === 'Greek' ? 'Εργασίες' : 
+              language === 'Filipino' ? 'Mga Takdang-aralin' : 
+              language === 'Waray' ? 'Mga Buruhatun' : 
+              language === 'Arabic' ? 'الواجبات' : 'Assignments';
+      case 'activeAssignments':
+        return language === 'English' ? 'Active Assignments' : 
+              language === 'Greek' ? 'Ενεργές Εργασίες' : 
+              language === 'Filipino' ? 'Mga Aktibong Takdang-aralin' : 
+              language === 'Waray' ? 'Mga Aktibo nga Buruhatun' : 
+              language === 'Arabic' ? 'الواجبات النشطة' : 'Active Assignments';
+      case 'viewAll':
+        return language === 'English' ? 'View all' : 
+              language === 'Greek' ? 'Προβολή όλων' : 
+              language === 'Filipino' ? 'Tingnan lahat' : 
+              language === 'Waray' ? 'Kitaa ngatanan' : 
+              language === 'Arabic' ? 'عرض الكل' : 'View all';
+      case 'materials':
+        return language === 'English' ? 'Materials' : 
+              language === 'Greek' ? 'Υλικά' : 
+              language === 'Filipino' ? 'Mga Materyales' : 
+              language === 'Waray' ? 'Mga Materyal' : 
+              language === 'Arabic' ? 'المواد' : 'Materials';
+      case 'uploadMaterials':
+        return language === 'English' ? 'Upload Materials' : 
+              language === 'Greek' ? 'Ανέβασμα Υλικών' : 
+              language === 'Filipino' ? 'Mag-upload ng Materyales' : 
+              language === 'Waray' ? 'Pag-upload hin Materyal' : 
+              language === 'Arabic' ? 'تحميل المواد' : 'Upload Materials';
+      case 'courseStatus':
+        return language === 'English' ? 'Here\'s what\'s happening with your courses' : 
+              language === 'Greek' ? 'Εδώ είναι η κατάσταση των μαθημάτων σας' : 
+              language === 'Filipino' ? 'Narito ang mga nangyayari sa iyong mga kurso' : 
+              language === 'Waray' ? 'Adi an mga nangyayari ha imo mga kurso' : 
+              language === 'Arabic' ? 'إليك ما يحدث في دوراتك' : 'Here\'s what\'s happening with your courses';
+      default:
+        return key;
+    }
   };
 
   // Summary card component
@@ -460,14 +565,10 @@ const Dashboard: React.FC = () => {
                 component="h1" 
                 sx={{ fontWeight: 700, mb: 1, color: '#fff' }}
               >
-                {language === 'English' ? 
-                  `Welcome back, ${user?.fullName?.split(' ')[0] || 'Professor'}` : 
-                  `Maligayang pagbabalik, ${user?.fullName?.split(' ')[0] || 'Propesor'}`}
+                {getWelcomeMessage()}
               </Typography>
               <Typography variant="subtitle1" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-                {language === 'English' ? 
-                  'Here\'s what\'s happening with your courses' : 
-                  'Narito ang mga nangyayari sa iyong mga kurso'}
+                {getLocalizedText('courseStatus')}
               </Typography>
             </Box>
 
@@ -489,7 +590,7 @@ const Dashboard: React.FC = () => {
                 }}
                 onClick={handleUploadMaterials}
               >
-                Upload Materials
+                {getLocalizedText('uploadMaterials')}
               </Button>
             </Box>
           </Box>
@@ -504,12 +605,18 @@ const Dashboard: React.FC = () => {
                 bgcolor: 'rgba(255, 255, 255, 0.05)',
                 backdropFilter: 'blur(10px)',
                 borderRadius: 2,
-                border: '1px solid rgba(255, 255, 255, 0.1)'
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+                transition: 'transform 0.3s ease',
+                '&:hover': {
+                  transform: 'translateY(-5px)',
+                  boxShadow: '0 8px 25px rgba(0, 0, 0, 0.15)'
+                }
               }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                   <SchoolIcon sx={{ color: theme.palette.primary.main, mr: 1.5 }} />
                   <Typography variant="h6" color="white">
-                    {language === 'English' ? 'Courses' : 'Mga Kurso'}
+                    {getLocalizedText('courses')}
                   </Typography>
                 </Box>
                 <Typography variant="h3" sx={{ color: 'white', fontWeight: 600, mb: 1 }}>
@@ -517,7 +624,7 @@ const Dashboard: React.FC = () => {
                 </Typography>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-                    {language === 'English' ? 'Active Courses' : 'Mga Aktibong Kurso'}
+                    {getLocalizedText('activeCourses')}
                   </Typography>
                   <Button 
                     endIcon={<KeyboardArrowRightIcon />} 
@@ -526,7 +633,7 @@ const Dashboard: React.FC = () => {
                     to="/faculty/courses"
                     sx={{ textTransform: 'none' }}
                   >
-                    {language === 'English' ? 'View all' : 'Tingnan lahat'}
+                    {getLocalizedText('viewAll')}
                   </Button>
                 </Box>
               </Paper>
@@ -539,12 +646,18 @@ const Dashboard: React.FC = () => {
                 bgcolor: 'rgba(255, 255, 255, 0.05)',
                 backdropFilter: 'blur(10px)',
                 borderRadius: 2,
-                border: '1px solid rgba(255, 255, 255, 0.1)'
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+                transition: 'transform 0.3s ease',
+                '&:hover': {
+                  transform: 'translateY(-5px)',
+                  boxShadow: '0 8px 25px rgba(0, 0, 0, 0.15)'
+                }
               }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                   <PersonIcon sx={{ color: theme.palette.info.light, mr: 1.5 }} />
                   <Typography variant="h6" color="white">
-                    {language === 'English' ? 'Students' : 'Mga Estudyante'}
+                    {getLocalizedText('students')}
                   </Typography>
                 </Box>
                 <Typography variant="h3" sx={{ color: 'white', fontWeight: 600, mb: 1 }}>
@@ -552,7 +665,7 @@ const Dashboard: React.FC = () => {
                 </Typography>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-                    {language === 'English' ? 'Enrolled Students' : 'Mga Naka-enroll na Estudyante'}
+                    {getLocalizedText('enrolledStudents')}
                   </Typography>
                   <Button 
                     endIcon={<KeyboardArrowRightIcon />} 
@@ -561,7 +674,7 @@ const Dashboard: React.FC = () => {
                     to="/faculty/students"
                     sx={{ textTransform: 'none' }}
                   >
-                    {language === 'English' ? 'View all' : 'Tingnan lahat'}
+                    {getLocalizedText('viewAll')}
                   </Button>
                 </Box>
               </Paper>
@@ -574,12 +687,18 @@ const Dashboard: React.FC = () => {
                 bgcolor: 'rgba(255, 255, 255, 0.05)',
                 backdropFilter: 'blur(10px)',
                 borderRadius: 2,
-                border: '1px solid rgba(255, 255, 255, 0.1)'
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+                transition: 'transform 0.3s ease',
+                '&:hover': {
+                  transform: 'translateY(-5px)',
+                  boxShadow: '0 8px 25px rgba(0, 0, 0, 0.15)'
+                }
               }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                   <AssignmentIcon sx={{ color: theme.palette.warning.light, mr: 1.5 }} />
                   <Typography variant="h6" color="white">
-                    {language === 'English' ? 'Assignments' : 'Mga Takdang-aralin'}
+                    {getLocalizedText('assignments')}
                   </Typography>
                 </Box>
                 <Typography variant="h3" sx={{ color: 'white', fontWeight: 600, mb: 1 }}>
@@ -587,7 +706,7 @@ const Dashboard: React.FC = () => {
                 </Typography>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-                    {language === 'English' ? 'Active Assignments' : 'Mga Aktibong Takdang-aralin'}
+                    {getLocalizedText('activeAssignments')}
                   </Typography>
                   <Button 
                     endIcon={<KeyboardArrowRightIcon />} 
@@ -596,7 +715,7 @@ const Dashboard: React.FC = () => {
                     to="/faculty/assignments"
                     sx={{ textTransform: 'none' }}
                   >
-                    {language === 'English' ? 'View all' : 'Tingnan lahat'}
+                    {getLocalizedText('viewAll')}
                   </Button>
                 </Box>
               </Paper>
@@ -609,12 +728,18 @@ const Dashboard: React.FC = () => {
                 bgcolor: 'rgba(255, 255, 255, 0.05)',
                 backdropFilter: 'blur(10px)',
                 borderRadius: 2,
-                border: '1px solid rgba(255, 255, 255, 0.1)'
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+                transition: 'transform 0.3s ease',
+                '&:hover': {
+                  transform: 'translateY(-5px)',
+                  boxShadow: '0 8px 25px rgba(0, 0, 0, 0.15)'
+                }
               }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                   <BookIcon sx={{ color: theme.palette.success.light, mr: 1.5 }} />
                   <Typography variant="h6" color="white">
-                    {language === 'English' ? 'Materials' : 'Mga Materyales'}
+                    {getLocalizedText('materials')}
                   </Typography>
                 </Box>
                 <Typography variant="h3" sx={{ color: 'white', fontWeight: 600, mb: 1 }}>
@@ -622,7 +747,7 @@ const Dashboard: React.FC = () => {
                 </Typography>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-                    {language === 'English' ? 'Materials' : 'Mga Materyales'}
+                    {getLocalizedText('uploadMaterials')}
                   </Typography>
                   <Button 
                     endIcon={<KeyboardArrowRightIcon />} 
@@ -631,7 +756,7 @@ const Dashboard: React.FC = () => {
                     to="/faculty/materials"
                     sx={{ textTransform: 'none' }}
                   >
-                    {language === 'English' ? 'View all' : 'Tingnan lahat'}
+                    {getLocalizedText('viewAll')}
                   </Button>
                 </Box>
               </Paper>

@@ -20,11 +20,11 @@ const GridItem = (props: any) => <MuiGrid item {...props} />;
 
 // List of available campuses
 const campuses = [
+  'Main Campus: Undisclosed location, Philippines',
   'Biringan Campus',
-  'Wakanda Campus',
-  'Atlantis Campus',
-  'El Dorado Campus',
-  'Asgard Campus'
+  'Sun and Moon Campus',
+  'Galactic Campus',
+  'Atlantis Campus'
 ];
 
 // Course interface
@@ -67,7 +67,7 @@ const CourseManagement: React.FC = () => {
     code: '',
     title: '',
     department: '',
-    campus: 'Biringan Campus',
+    campus: 'Main Campus: Undisclosed location, Philippines',
     instructor: '',
     status: 'active'
   });
@@ -176,7 +176,7 @@ const CourseManagement: React.FC = () => {
       code: '',
       title: '',
       department: '',
-      campus: 'Biringan Campus',
+      campus: 'Main Campus: Undisclosed location, Philippines',
       instructor: '',
       status: 'active'
     });

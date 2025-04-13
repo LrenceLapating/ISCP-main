@@ -31,8 +31,8 @@ interface User {
 
 // Sample campus data
 const campuses = [
-  'All Campuses', 'Biringan Campus', 'Wakanda Campus', 'Atlantis Campus', 
-  'El Dorado Campus', 'Asgard Campus'
+  'All Campuses', 'Main Campus: Undisclosed location, Philippines', 'Biringan Campus', 
+  'Sun and Moon Campus', 'Galactic Campus', 'Atlantis Campus'
 ];
 
 const UserManagement: React.FC = () => {
@@ -63,7 +63,7 @@ const UserManagement: React.FC = () => {
     name: '',
     email: '',
     role: 'student',
-    campus: 'Main Campus',
+    campus: 'Main Campus: Undisclosed location, Philippines',
     status: 'active'
   });
   
