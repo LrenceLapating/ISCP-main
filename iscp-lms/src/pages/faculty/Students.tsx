@@ -7,18 +7,20 @@ import {
   Avatar, Chip, Menu, MenuItem, Divider, FormControl,
   InputLabel, Select, Tabs, Tab, useTheme, alpha,
   Card, CardContent, CardHeader, Grid, LinearProgress, Badge,
-  Tooltip, List, ListItem, ListItemIcon, ListItemText
+  Tooltip, List, ListItem, ListItemIcon, ListItemText,
+  Dialog, DialogTitle, DialogContent, DialogActions, DialogContentText
 } from '@mui/material';
 import {
   Search, FilterList, MoreVert, Email,
   Message, Assessment, TrendingUp, PersonRemove,
   CheckCircle, Schedule, Warning, School, Grade,
   CalendarToday, Assignment, NotificationsActive, ContactMail,
-  LibraryBooks, StarRate, FactCheck, Book
+  LibraryBooks, StarRate, FactCheck, Book, EditOutlined as EditIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import facultyService, { Course, Student } from '../../services/FacultyService';
 import GridItem from '../../components/common/GridItem';
+import StudentDetailsDialog from '../../components/faculty/StudentDetailsDialog';
 
 // Student status interface
 interface StatusOption {
@@ -72,7 +74,7 @@ const getAvatarBgColor = (id: number) => {
   return colors[id % colors.length];
 };
 
-const Students: React.FC = () => {
+const Students = () => {
   const theme = useTheme();
   const navigate = useNavigate();
   
@@ -91,6 +93,22 @@ const Students: React.FC = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedStudentId, setSelectedStudentId] = useState<number | null>(null);
   const isMenuOpen = Boolean(anchorEl);
+  
+  // Edit and delete dialog state
+  const [openEditDialog, setOpenEditDialog] = useState(false);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [editingStudent, setEditingStudent] = useState<{
+    id: number;
+    fullName: string;
+    email: string;
+    campus: string;
+    status: string;
+    studentId: string;
+  } | null>(null);
+  
+  // Add a new state for the student details dialog
+  const [studentDetailsOpen, setStudentDetailsOpen] = useState(false);
+  const [selectedStudentDetails, setSelectedStudentDetails] = useState<EnhancedStudent | null>(null);
   
   // Fetch students and courses on component mount
   useEffect(() => {
@@ -309,17 +327,23 @@ const Students: React.FC = () => {
   }, [searchQuery, statusFilter, courseFilter, students]);
   
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
+    const newQuery = e.target.value;
+    setSearchQuery(newQuery);
+    const filtered = filterStudents(newQuery, statusFilter, courseFilter);
+    setFilteredStudents(filtered);
   };
   
   const handleStatusFilterChange = (_: React.SyntheticEvent, newValue: string) => {
     setStatusFilter(newValue);
-    filterStudents(searchQuery, newValue, courseFilter);
+    const filtered = filterStudents(searchQuery, newValue, courseFilter);
+    setFilteredStudents(filtered);
   };
   
   const handleCourseFilterChange = (e: React.ChangeEvent<{ value: unknown }>) => {
-    setCourseFilter(e.target.value as (number | 'all'));
-    filterStudents(searchQuery, statusFilter, e.target.value as (number | 'all'));
+    const newCourseFilter = e.target.value as number | 'all';
+    setCourseFilter(newCourseFilter);
+    const filtered = filterStudents(searchQuery, statusFilter, newCourseFilter);
+    setFilteredStudents(filtered);
   };
   
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, studentId: number) => {
@@ -420,40 +444,37 @@ const Students: React.FC = () => {
   };
   
   const handleStudentClick = (studentId: number) => {
-    navigate(`/faculty/students/${studentId}`);
+    // Find the clicked student
+    const student = students.find(s => s.id === studentId);
+    if (student) {
+      setSelectedStudentDetails(student);
+      setStudentDetailsOpen(true);
+    }
   };
 
-  // Function to filter students based on search, status, and course
-  const filterStudents = (search: string, status: string, course: number | 'all') => {
-    let filtered = [...students];
-    
-    // Filter by search query
-    if (search) {
-      const searchLower = search.toLowerCase();
-      filtered = filtered.filter(student => 
-        student.fullName.toLowerCase().includes(searchLower) ||
-        student.email.toLowerCase().includes(searchLower) ||
-        (student.studentId && student.studentId.toLowerCase().includes(searchLower))
-      );
-    }
-    
-    // Filter by status
-    if (status !== 'all') {
-      filtered = filtered.filter(student => student.status === status);
-    }
-    
-    // Filter by course
-    if (course !== 'all') {
-      filtered = filtered.filter(student => 
-        student.enrolledCourses?.some(c => c.id === course)
-      );
-    }
-    
-    setFilteredStudents(filtered);
+  // Fix the filterStudents function to use student.status properly
+  const filterStudents = (search: string, status: string, course: number | 'all'): EnhancedStudent[] => {
+    return students.filter(student => {
+      // Filter by search query
+      const matchesSearch = !search || 
+        student.fullName.toLowerCase().includes(search.toLowerCase()) ||
+        student.email.toLowerCase().includes(search.toLowerCase()) ||
+        (student.studentId && student.studentId.toLowerCase().includes(search.toLowerCase()));
+      
+      // Filter by status - use student's status field directly
+      const matchesStatus = status === 'all' || student.status === status;
+      
+      // Filter by course
+      const matchesCourse = course === 'all' || 
+        (student.enrolledCourses && 
+          student.enrolledCourses.some(c => c.id === course));
+      
+      return matchesSearch && matchesStatus && matchesCourse;
+    });
   };
   
   const getStatusChipColor = (status: string): StatusOption['color'] => {
-    const option = statusOptions.find(o => o.value === status);
+    const option = statusOptions.find(opt => opt.value === status);
     return option ? option.color : 'default';
   };
   
@@ -488,6 +509,128 @@ const Students: React.FC = () => {
   
   const getStudentStatus = (student: EnhancedStudent): string => {
     return student.status || 'active';
+  };
+  
+  const handleEditStudent = (studentId: number) => {
+    handleMenuClose();
+    
+    // Find the student to edit
+    const student = students.find(s => s.id === studentId);
+    if (student) {
+      // Initialize the form with student data
+      setEditingStudent({
+        id: student.id,
+        fullName: student.fullName,
+        email: student.email,
+        campus: student.campus,
+        status: student.status || 'active',
+        studentId: student.studentId || `ST${String(student.id).padStart(5, '0')}`
+      });
+      
+      // Open the edit dialog
+      setOpenEditDialog(true);
+    }
+  };
+
+  // Add handleFormChange function for edit form
+  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | { name?: string; value: unknown }>) => {
+    const { name, value } = e.target;
+    if (editingStudent && name) {
+      setEditingStudent({
+        ...editingStudent,
+        [name]: value
+      });
+    }
+  };
+
+  // Add handleSaveStudent function
+  const handleSaveStudent = async () => {
+    if (!editingStudent) return;
+    
+    try {
+      setLoading(true);
+      
+      // In a real implementation, this would call an API endpoint
+      // For now, simulate API call with a timeout
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Update the student in local state
+      const updatedStudents = students.map(student => 
+        student.id === editingStudent.id 
+          ? { ...student, ...editingStudent } 
+          : student
+      );
+      
+      setStudents(updatedStudents);
+      
+      // Update filtered students
+      const newFilteredStudents = filterStudents(searchQuery, statusFilter, courseFilter);
+      setFilteredStudents(newFilteredStudents);
+      
+      setSuccessMessage(`Student "${editingStudent.fullName}" updated successfully`);
+      handleCloseEditDialog();
+    } catch (error) {
+      console.error('Error updating student:', error);
+      setError('Failed to update student. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Add dialog close handlers
+  const handleCloseEditDialog = () => {
+    setOpenEditDialog(false);
+    setEditingStudent(null);
+  };
+
+  const handleDeleteStudent = async (studentId: number) => {
+    handleMenuClose();
+    setSelectedStudentId(studentId);
+    setOpenDeleteDialog(true);
+  };
+
+  // Add handleConfirmDelete function
+  const handleConfirmDelete = async () => {
+    if (!selectedStudentId) return;
+    
+    try {
+      setLoading(true);
+      
+      // In a real implementation, this would call the API
+      // For now, simulate API call with a timeout
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Find the student name before removal for the success message
+      const studentToRemove = students.find(s => s.id === selectedStudentId);
+      const studentName = studentToRemove?.fullName || 'Student';
+      
+      // Remove the student from the local state
+      const updatedStudents = students.filter(student => student.id !== selectedStudentId);
+      setStudents(updatedStudents);
+      
+      // Update filtered students
+      const newFilteredStudents = filterStudents(searchQuery, statusFilter, courseFilter);
+      setFilteredStudents(newFilteredStudents);
+      
+      setSuccessMessage(`Student "${studentName}" deleted successfully`);
+      handleCloseDeleteDialog();
+    } catch (error) {
+      console.error('Error deleting student:', error);
+      setError('Failed to delete student. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCloseDeleteDialog = () => {
+    setOpenDeleteDialog(false);
+    setSelectedStudentId(null);
+  };
+  
+  // Add a function to close the details dialog
+  const handleCloseStudentDetails = () => {
+    setStudentDetailsOpen(false);
+    setSelectedStudentDetails(null);
   };
   
   const renderGridView = () => (
@@ -657,162 +800,86 @@ const Students: React.FC = () => {
   );
   
   const renderTableView = () => (
-    <Paper elevation={0} variant="outlined">
-      <TableContainer>
-        <Table>
-        <TableHead>
-            <TableRow>
-              <TableCell>Student</TableCell>
-              <TableCell>ID</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Campus</TableCell>
-              <TableCell>Enrolled</TableCell>
-              <TableCell>Courses</TableCell>
-              <TableCell>Progress</TableCell>
-              <TableCell align="right">Actions</TableCell>
+    <TableContainer component={Paper} elevation={0} sx={{ border: 1, borderColor: 'divider' }}>
+      <Table size="medium">
+        <TableHead sx={{ 
+          backgroundColor: theme.palette.mode === 'dark' 
+            ? alpha(theme.palette.primary.main, 0.1) 
+            : alpha(theme.palette.primary.light, 0.1) 
+        }}>
+          <TableRow>
+            <TableCell>Student</TableCell>
+            <TableCell>ID</TableCell>
+            <TableCell>Status</TableCell>
+            <TableCell>Campus</TableCell>
+            <TableCell>Enrolled</TableCell>
+            <TableCell>Courses</TableCell>
+            <TableCell align="right">Actions</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
-            {filteredStudents.map(student => (
-            <TableRow 
-              key={student.id}
-                hover 
+          {filteredStudents.length > 0 ? (
+            filteredStudents.map((student) => (
+              <TableRow 
+                key={student.id}
+                hover
                 onClick={() => handleStudentClick(student.id)}
-              sx={{ 
+                sx={{ 
                   cursor: 'pointer',
-                  '&:hover': { backgroundColor: alpha(theme.palette.primary.main, 0.05) }
-              }}
-            >
-              <TableCell>
+                  '&:last-child td, &:last-child th': { border: 0 },
+                }}
+              >
+                <TableCell>
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <Avatar
-                      src={student.profilePicture || student.profileImage}
-                      alt={student.fullName}
-                      sx={{ 
-                        width: 40, 
-                        height: 40,
-                        bgcolor: student.profilePicture ? undefined : getAvatarBgColor(student.id)
-                      }}
-                    >
-                      {student.fullName?.charAt(0)}
-                    </Avatar>
+                    {getStudentAvatar(student)}
                     <Box sx={{ ml: 2 }}>
-                      <Typography variant="body1">{student.fullName}</Typography>
+                      <Typography variant="subtitle2" component="div">
+                        {student.fullName}
+                      </Typography>
                       <Typography variant="body2" color="text.secondary">
                         {student.email}
                       </Typography>
+                    </Box>
                   </Box>
-                </Box>
-              </TableCell>
+                </TableCell>
                 <TableCell>{student.studentId || `ST${String(student.id).padStart(5, '0')}`}</TableCell>
                 <TableCell>
                   <Chip 
-                    label={getStudentStatus(student)} 
-                    size="small" 
-                    color={getStatusChipColor(student.status || 'active')} 
+                    label={getStudentStatus(student)}
+                    color={getStatusChipColor(getStudentStatus(student))}
+                    size="small"
+                    sx={{ textTransform: 'capitalize' }}
                   />
                 </TableCell>
                 <TableCell>{student.campus}</TableCell>
                 <TableCell>{getStudentEnrollmentDate(student)}</TableCell>
                 <TableCell>{getStudentCoursesCount(student)}</TableCell>
-                <TableCell>
-                  <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', maxWidth: 150 }}>
-                    <LinearProgress 
-                      variant="determinate" 
-                      value={student.progress || 0} 
-                      sx={{ 
-                        width: '100%', 
-                        height: 6, 
-                        borderRadius: 3,
-                        mr: 1
-                      }}
-                    />
-                    <Typography variant="caption">
-                      {`${Math.round(student.progress || 0)}%`}
-                    </Typography>
-                </Box>
-              </TableCell>
-              <TableCell align="right">
-                <IconButton 
-                  size="small"
+                <TableCell align="right">
+                  <IconButton
+                    aria-label="more options"
                     onClick={(e) => {
-                      e.stopPropagation();
+                      e.stopPropagation(); // Prevent row click
                       handleMenuOpen(e, student.id);
                     }}
-                >
-                  <MoreVert />
-                </IconButton>
+                    size="small"
+                  >
+                    <MoreVert />
+                  </IconButton>
+                </TableCell>
+              </TableRow>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={7} align="center" sx={{ py: 3 }}>
+                <Typography variant="body1" color="text.secondary">
+                  {loading ? 'Loading students...' : 'No students found matching your search criteria'}
+                </Typography>
               </TableCell>
             </TableRow>
-          ))}
+          )}
         </TableBody>
       </Table>
-        
-        {/* Student Actions Menu */}
-        <Menu
-          anchorEl={anchorEl}
-          open={isMenuOpen}
-          onClose={handleMenuClose}
-          PaperProps={{
-            elevation: 3,
-            sx: { minWidth: 200 }
-          }}
-        >
-          <MenuItem onClick={handleEmailStudent}>
-            <ListItemIcon>
-              <Email fontSize="small" />
-            </ListItemIcon>
-            <ListItemText>Email Student</ListItemText>
-          </MenuItem>
-          <MenuItem onClick={handleViewProgress}>
-            <ListItemIcon>
-              <TrendingUp fontSize="small" />
-            </ListItemIcon>
-            <ListItemText>View Progress</ListItemText>
-          </MenuItem>
-          <MenuItem onClick={handleViewGrades}>
-            <ListItemIcon>
-              <Assessment fontSize="small" />
-            </ListItemIcon>
-            <ListItemText>View Grades</ListItemText>
-          </MenuItem>
-          
-          <Divider />
-          
-          <Typography variant="caption" sx={{ px: 2, py: 0.5, display: 'block', color: 'text.secondary' }}>
-            Change Status
-          </Typography>
-          
-          <MenuItem onClick={() => handleChangeStatus('active')}>
-            <ListItemIcon>
-              <CheckCircle fontSize="small" color="success" />
-            </ListItemIcon>
-            <ListItemText>Set as Active</ListItemText>
-          </MenuItem>
-          
-          <MenuItem onClick={() => handleChangeStatus('at-risk')}>
-            <ListItemIcon>
-              <Warning fontSize="small" color="error" />
-            </ListItemIcon>
-            <ListItemText>Mark At Risk</ListItemText>
-          </MenuItem>
-          
-          <MenuItem onClick={() => handleChangeStatus('excellent')}>
-            <ListItemIcon>
-              <StarRate fontSize="small" color="primary" />
-            </ListItemIcon>
-            <ListItemText>Mark as Excellent</ListItemText>
-          </MenuItem>
-          
-          <MenuItem onClick={() => handleChangeStatus('inactive')}>
-            <ListItemIcon>
-              <Schedule fontSize="small" color="warning" />
-            </ListItemIcon>
-            <ListItemText>Set as Inactive</ListItemText>
-          </MenuItem>
-        </Menu>
     </TableContainer>
-    </Paper>
   );
   
   // Update student progress function
@@ -847,6 +914,86 @@ const Students: React.FC = () => {
       alert('An error occurred while updating student progress.');
     }
   };
+  
+  // Add the renderMenu function
+  const renderMenu = () => (
+    <Menu
+      anchorEl={anchorEl}
+      open={isMenuOpen}
+      onClose={handleMenuClose}
+      PaperProps={{
+        elevation: 3,
+        sx: { mt: 1, minWidth: 180 }
+      }}
+    >
+      <MenuItem onClick={handleEmailStudent}>
+        <ListItemIcon>
+          <Email fontSize="small" />
+        </ListItemIcon>
+        <ListItemText primary="Email Student" />
+      </MenuItem>
+      
+      <MenuItem onClick={handleViewProgress}>
+        <ListItemIcon>
+          <Assessment fontSize="small" />
+        </ListItemIcon>
+        <ListItemText primary="View Progress" />
+      </MenuItem>
+      
+      <MenuItem onClick={handleViewGrades}>
+        <ListItemIcon>
+          <Grade fontSize="small" />
+        </ListItemIcon>
+        <ListItemText primary="View Grades" />
+      </MenuItem>
+      
+      <Divider />
+      
+      <MenuItem onClick={() => handleChangeStatus('active')}>
+        <ListItemIcon>
+          <CheckCircle fontSize="small" color="success" />
+        </ListItemIcon>
+        <ListItemText primary="Mark as Active" />
+      </MenuItem>
+      
+      <MenuItem onClick={() => handleChangeStatus('at-risk')}>
+        <ListItemIcon>
+          <Warning fontSize="small" color="error" />
+        </ListItemIcon>
+        <ListItemText primary="Mark as At Risk" />
+      </MenuItem>
+      
+      <MenuItem onClick={() => handleChangeStatus('inactive')}>
+        <ListItemIcon>
+          <Schedule fontSize="small" color="warning" />
+        </ListItemIcon>
+        <ListItemText primary="Mark as Inactive" />
+      </MenuItem>
+      
+      <MenuItem onClick={() => handleChangeStatus('excellent')}>
+        <ListItemIcon>
+          <StarRate fontSize="small" color="primary" />
+        </ListItemIcon>
+        <ListItemText primary="Mark as Excellent" />
+      </MenuItem>
+      
+      <Divider />
+      
+      <MenuItem onClick={() => handleEditStudent(selectedStudentId || 0)}>
+        <ListItemIcon>
+          <EditIcon fontSize="small" />
+        </ListItemIcon>
+        <ListItemText primary="Edit Student" />
+      </MenuItem>
+      
+      <MenuItem onClick={() => handleDeleteStudent(selectedStudentId || 0)}>
+        <ListItemIcon>
+          <PersonRemove fontSize="small" color="error" />
+        </ListItemIcon>
+        <ListItemText primary="Delete Student" />
+      </MenuItem>
+    </Menu>
+  );
   
   return (
     <FacultyLayout title="Students">
@@ -1024,7 +1171,6 @@ const Students: React.FC = () => {
                     <TableCell sx={{ color: 'rgba(255, 255, 255, 0.7)', borderColor: 'rgba(255, 255, 255, 0.1)' }}>Campus</TableCell>
                     <TableCell sx={{ color: 'rgba(255, 255, 255, 0.7)', borderColor: 'rgba(255, 255, 255, 0.1)' }}>Enrolled</TableCell>
                     <TableCell sx={{ color: 'rgba(255, 255, 255, 0.7)', borderColor: 'rgba(255, 255, 255, 0.1)' }}>Courses</TableCell>
-                    <TableCell sx={{ color: 'rgba(255, 255, 255, 0.7)', borderColor: 'rgba(255, 255, 255, 0.1)' }}>Progress</TableCell>
                     <TableCell align="right" sx={{ color: 'rgba(255, 255, 255, 0.7)', borderColor: 'rgba(255, 255, 255, 0.1)' }}>Actions</TableCell>
                   </TableRow>
                 </TableHead>
@@ -1075,24 +1221,6 @@ const Students: React.FC = () => {
                       <TableCell>{student.campus}</TableCell>
                       <TableCell>{getStudentEnrollmentDate(student)}</TableCell>
                       <TableCell>{getStudentCoursesCount(student)}</TableCell>
-                      <TableCell>
-                        <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', maxWidth: 150 }}>
-                          <LinearProgress 
-                            variant="determinate" 
-                            value={student.progress || 0} 
-                            sx={{ 
-                              width: '100%', 
-                              height: 6, 
-                              borderRadius: 3,
-                              mr: 1,
-                              bgcolor: 'rgba(255, 255, 255, 0.1)'
-                            }}
-                          />
-                          <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-                            {`${Math.round(student.progress || 0)}%`}
-                          </Typography>
-                        </Box>
-                      </TableCell>
                       <TableCell align="right">
                         <IconButton 
                           size="small" 
@@ -1212,13 +1340,115 @@ const Students: React.FC = () => {
                           }}
                         />
                       </Box>
-          )}
-        </Box>
+                    )}
+                  </Box>
                 </Box>
               ))}
             </Box>
           )
         )}
+        {renderMenu()}
+        
+        {/* Edit Student Dialog */}
+        <Dialog open={openEditDialog} onClose={handleCloseEditDialog} maxWidth="sm" fullWidth>
+          <DialogTitle>Edit Student</DialogTitle>
+          <DialogContent>
+            {editingStudent && (
+              <Box component="form" sx={{ mt: 2 }}>
+                <TextField
+                  name="fullName"
+                  label="Full Name"
+                  value={editingStudent.fullName}
+                  onChange={handleFormChange}
+                  fullWidth
+                  margin="normal"
+                  variant="outlined"
+                />
+                
+                <TextField
+                  name="email"
+                  label="Email"
+                  type="email"
+                  value={editingStudent.email}
+                  onChange={handleFormChange}
+                  fullWidth
+                  margin="normal"
+                  variant="outlined"
+                />
+                
+                <TextField
+                  name="studentId"
+                  label="Student ID"
+                  value={editingStudent.studentId}
+                  onChange={handleFormChange}
+                  fullWidth
+                  margin="normal"
+                  variant="outlined"
+                />
+                
+                <TextField
+                  name="campus"
+                  label="Campus"
+                  value={editingStudent.campus}
+                  onChange={handleFormChange}
+                  fullWidth
+                  margin="normal"
+                  variant="outlined"
+                />
+                
+                <FormControl fullWidth margin="normal">
+                  <InputLabel>Status</InputLabel>
+                  <Select
+                    name="status"
+                    value={editingStudent.status}
+                    onChange={handleFormChange as any}
+                    label="Status"
+                  >
+                    <MenuItem value="active">Active</MenuItem>
+                    <MenuItem value="inactive">Inactive</MenuItem>
+                    <MenuItem value="at-risk">At Risk</MenuItem>
+                    <MenuItem value="excellent">Excellent</MenuItem>
+                  </Select>
+                </FormControl>
+              </Box>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseEditDialog}>Cancel</Button>
+            <Button onClick={handleSaveStudent} variant="contained" color="primary">
+              Save Changes
+            </Button>
+          </DialogActions>
+        </Dialog>
+        
+        {/* Delete Confirmation Dialog */}
+        <Dialog
+          open={openDeleteDialog}
+          onClose={handleCloseDeleteDialog}
+        >
+          <DialogTitle>Confirm Deletion</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              Are you sure you want to delete this student? This action cannot be undone.
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseDeleteDialog}>Cancel</Button>
+            <Button onClick={handleConfirmDelete} color="error" variant="contained">
+              Delete
+            </Button>
+          </DialogActions>
+        </Dialog>
+        
+        {/* Student Details Dialog */}
+        <StudentDetailsDialog
+          open={studentDetailsOpen}
+          onClose={handleCloseStudentDetails}
+          student={selectedStudentDetails}
+          onEdit={handleEditStudent}
+          getStatusColor={getStatusChipColor}
+          getAvatarColor={getAvatarBgColor}
+        />
       </Container>
     </FacultyLayout>
   );
