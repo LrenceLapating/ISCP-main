@@ -1,3 +1,14 @@
+/**
+ * LegacyRecords.tsx
+ * 
+ * Author: Marc Laurence Lapating
+ * Date: April 6, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Student legacy records page for accessing archived academic
+ * records, transcripts, and historical course information.
+ */
+
 import React, { useState, useEffect } from 'react';
 import {
   Box,

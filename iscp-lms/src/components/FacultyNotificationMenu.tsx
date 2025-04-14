@@ -1,3 +1,14 @@
+/**
+ * FacultyNotificationMenu.tsx
+ * 
+ * Author: Marc Laurence Lapating
+ * Date: April 2, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Faculty notification menu component for displaying and managing
+ * course-related notifications, submissions, and messages.
+ */
+
 import React, { useState, useEffect, useRef } from 'react';
 import {
   IconButton,

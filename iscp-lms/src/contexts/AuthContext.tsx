@@ -1,3 +1,14 @@
+/**
+ * AuthContext.tsx
+ * 
+ * Author: MARC MAURICE M. COSTILLAS
+ * Date: March 27, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Authentication context provider for the application.
+ * Manages user authentication state, login/logout functionality, and role-based access.
+ */
+
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { User, AuthState, LoginCredentials, RegisterCredentials } from '../types/auth.types';
 import axios from 'axios';

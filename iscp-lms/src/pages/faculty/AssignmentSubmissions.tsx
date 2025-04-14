@@ -1,3 +1,14 @@
+/**
+ * AssignmentSubmissions.tsx
+ * 
+ * Author: Marc Laurence Lapating
+ * Date: April 8, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Faculty assignment submissions review page for
+ * viewing and grading student assignment submissions.
+ */
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import FacultyLayout from '../../components/FacultyLayout';

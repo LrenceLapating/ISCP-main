@@ -1,3 +1,14 @@
+/**
+ * PageLayout.tsx
+ * 
+ * Author: Marc Laurence Lapating
+ * Date: March 30, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Common page layout component providing navigation sidebar,
+ * header, and consistent layout structure for student pages.
+ */
+
 import React, { ReactNode, useState, useEffect } from 'react';
 import { 
   Box, 

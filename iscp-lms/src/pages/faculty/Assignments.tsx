@@ -1,3 +1,14 @@
+/**
+ * Assignments.tsx (Faculty)
+ * 
+ * Author: Marc Laurence Lapating
+ * Date: April 8, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Faculty assignment management page for creating, editing,
+ * and grading student assignments.
+ */
+
 import React, { useState, useEffect } from 'react';
 import FacultyLayout from '../../components/FacultyLayout';
 import {

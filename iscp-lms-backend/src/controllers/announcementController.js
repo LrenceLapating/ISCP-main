@@ -1,3 +1,14 @@
+/**
+ * announcementController.js
+ * 
+ * Author: Josiephous Pierre Dosdos
+ * Date: May 19, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Announcement controller managing system-wide announcements,
+ * notifications, and targeted announcements for specific user groups.
+ */
+
 const { pool } = require('../config/db');
 const notificationHelpers = require('../utils/notificationHelpers');
 

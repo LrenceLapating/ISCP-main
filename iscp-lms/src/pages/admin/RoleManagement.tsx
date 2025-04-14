@@ -1,3 +1,14 @@
+/**
+ * RoleManagement.tsx
+ * 
+ * Author: Marc Laurence Lapating
+ * Date: April 12, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Administrator role management interface for creating and assigning
+ * user roles and permissions across the LMS platform.
+ */
+
 import React, { useState, useEffect } from 'react';
 import {
   Box, Typography, Paper, Button, Dialog, DialogTitle,

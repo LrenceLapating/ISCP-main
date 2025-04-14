@@ -1,3 +1,14 @@
+/**
+ * App.tsx
+ * 
+ * Author: Marc Laurence Lapating
+ * Date: March 26, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Main application component that sets up routing, context providers,
+ * and the overall application structure. Manages role-based navigation and protection.
+ */
+
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Box, CssBaseline } from '@mui/material';

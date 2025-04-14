@@ -1,3 +1,15 @@
+/**
+ * StudentService.ts
+ * 
+ * Author: Marc Laurence Lapating
+ * Date: April 1, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Service class that handles all student-related API calls and data management.
+ * This includes course enrollment, assignment submission, grade viewing,
+ * and offline mode capabilities.
+ */
+
 import { v4 as uuidv4 } from 'uuid';
 import axios from 'axios';
 import messageService from './MessageService';

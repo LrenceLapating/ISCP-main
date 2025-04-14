@@ -1,3 +1,14 @@
+/**
+ * studentRoutes.js
+ * 
+ * Author: Josiephous Pierre Dosdos
+ * Date: May 19, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Student routes for course enrollment, assignment submissions,
+ * grade viewing, and student-specific functionality.
+ */
+
 const express = require('express');
 const router = express.Router();
 const { pool } = require('../config/db');

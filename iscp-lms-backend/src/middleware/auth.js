@@ -1,3 +1,14 @@
+/**
+ * auth.js
+ * 
+ * Author: Josiephous Pierre Dosdos
+ * Date: May 18, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Authentication middleware for verifying JWT tokens,
+ * user permissions, and role-based access control.
+ */
+
 const jwt = require('jsonwebtoken');
 const { pool } = require('../config/db');
 require('dotenv').config();

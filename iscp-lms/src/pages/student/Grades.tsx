@@ -1,3 +1,14 @@
+/**
+ * Grades.tsx
+ * 
+ * Author: Marc Laurence Lapating
+ * Date: April 4, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Student grades page for viewing grades across all courses,
+ * with detailed breakdowns and progress tracking.
+ */
+
 import React, { useState, useEffect } from 'react';
 import StudentLayout from '../../components/StudentLayout';
 import {

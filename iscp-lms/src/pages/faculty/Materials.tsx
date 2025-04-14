@@ -1,3 +1,14 @@
+/**
+ * Materials.tsx (Faculty)
+ * 
+ * Author: Marc Laurence Lapating
+ * Date: April 9, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Faculty materials management page for uploading,
+ * organizing, and distributing course materials.
+ */
+
 import React, { useState, useEffect } from 'react';
 import FacultyLayout from '../../components/FacultyLayout';
 import {

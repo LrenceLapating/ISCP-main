@@ -1,3 +1,14 @@
+/**
+ * Dashboard.tsx (Faculty)
+ * 
+ * Author: Marc Laurence Lapating
+ * Date: April 7, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Faculty dashboard page showing course teaching schedule,
+ * pending assignments to grade, and student statistics.
+ */
+
 import React, { useState, useEffect } from 'react';
 import FacultyLayout from '../../components/FacultyLayout';
 import {

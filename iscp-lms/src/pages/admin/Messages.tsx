@@ -1,3 +1,14 @@
+/**
+ * Messages.tsx (Admin)
+ * 
+ * Author: Marc Laurence Lapating
+ * Date: April 13, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Administrator messaging interface for communicating with
+ * faculty, students, and other administrators across the system.
+ */
+
 import React, { useState, useEffect, useRef } from 'react';
 import AdminLayout from '../../components/AdminLayout';
 import {

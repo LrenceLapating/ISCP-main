@@ -1,3 +1,14 @@
+/**
+ * authMiddleware.js
+ * 
+ * Author: Marc Laurence Lapating
+ * Date: May 24, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Authentication middleware for verifying user authorization
+ * and enforcing role-specific access controls.
+ */
+
 const jwt = require('jsonwebtoken');
 const { pool } = require('../config/db');
 require('dotenv').config();

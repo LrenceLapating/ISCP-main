@@ -1,3 +1,14 @@
+/**
+ * db.js
+ * 
+ * Author: Marc Laurence Lapating
+ * Date: May 15, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Database configuration and connection handling
+ * using MySQL for the LMS application.
+ */
+
 const mysql = require('mysql2/promise');
 require('dotenv').config();
 

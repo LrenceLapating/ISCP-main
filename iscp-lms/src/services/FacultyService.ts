@@ -1,3 +1,15 @@
+/**
+ * FacultyService.ts
+ * 
+ * Author: Marc Laurence Lapating
+ * Date: April 1, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Service class that handles all faculty-related API calls and data management.
+ * This includes course management, student grading, assignment creation/management,
+ * and communication with students.
+ */
+
 import axios from 'axios';
 
 export interface Course {

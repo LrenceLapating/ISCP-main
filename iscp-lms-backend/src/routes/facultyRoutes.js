@@ -1,3 +1,14 @@
+/**
+ * facultyRoutes.js
+ * 
+ * Author: Josiephous Pierre Dosdos
+ * Date: May 18, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Faculty routes for course management, assignment creation,
+ * grading, and student management by teaching staff.
+ */
+
 const express = require('express');
 const router = express.Router();
 const { pool } = require('../config/db');

@@ -1,3 +1,14 @@
+/**
+ * NotificationDropdown.tsx
+ * 
+ * Author: Marc Laurence Lapating
+ * Date: March 30, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Common notification dropdown component for displaying
+ * user notifications with read/unread status and navigation.
+ */
+
 import React, { useState, useEffect, useRef } from 'react';
 import {
   Menu,

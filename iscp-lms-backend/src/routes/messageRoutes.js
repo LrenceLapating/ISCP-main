@@ -1,3 +1,14 @@
+/**
+ * messageRoutes.js
+ * 
+ * Author: Josiephous Pierre Dosdos
+ * Date: May 25, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Message routes for user-to-user communication,
+ * group conversations, and notification delivery.
+ */
+
 const express = require('express');
 const router = express.Router();
 const { authMiddleware } = require('../middleware/authMiddleware');

@@ -1,3 +1,14 @@
+/**
+ * AdminNotificationMenu.tsx
+ * 
+ * Author: Marc Laurence Lapating
+ * Date: April 1, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Admin notification menu component for displaying and managing
+ * system notifications, alerts, and messages for administrators.
+ */
+
 import React, { useState, useEffect, useRef } from 'react';
 import {
   IconButton,

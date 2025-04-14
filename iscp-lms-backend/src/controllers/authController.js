@@ -1,3 +1,14 @@
+/**
+ * authController.js
+ * 
+ * Author: Josiephous Pierre Dosdos
+ * Date: May 17, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Authentication controller handling user registration,
+ * login, logout, and current user information retrieval.
+ */
+
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { pool } = require('../config/db');

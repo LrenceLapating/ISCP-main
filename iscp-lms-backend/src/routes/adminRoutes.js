@@ -1,3 +1,14 @@
+/**
+ * adminRoutes.js
+ * 
+ * Author: Marc Laurence Lapating
+ * Date: May 21, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Administrator routes for user management, dashboard
+ * statistics, system settings, and administrative operations.
+ */
+
 const express = require('express');
 const router = express.Router();
 const { pool } = require('../config/db');

@@ -1,3 +1,14 @@
+/**
+ * AnnouncementManagement.tsx
+ * 
+ * Author: Marc Laurence Lapating
+ * Date: April 12, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Administrator announcement management interface for creating
+ * and distributing system-wide announcements.
+ */
+
 import React, { useState, useEffect } from 'react';
 import {
   Box, Typography, Paper, Button, TextField, Dialog, DialogTitle,

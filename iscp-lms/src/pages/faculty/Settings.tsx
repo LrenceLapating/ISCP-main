@@ -1,3 +1,14 @@
+/**
+ * Settings.tsx (Faculty)
+ * 
+ * Author: Marc Laurence Lapating
+ * Date: April 9, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Faculty settings page for managing user profile, notification
+ * preferences, and account security options.
+ */
+
 import React, { useState, useEffect } from 'react';
 import FacultyLayout from '../../components/FacultyLayout';
 import {

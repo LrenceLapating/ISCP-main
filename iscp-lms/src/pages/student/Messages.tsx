@@ -1,3 +1,14 @@
+/**
+ * Messages.tsx
+ * 
+ * Author: Marc Laurence Lapating
+ * Date: April 5, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Student messaging interface for communicating with
+ * instructors and other students.
+ */
+
 import React, { useState, useEffect, useRef } from 'react';
 import StudentLayout from '../../components/StudentLayout';
 import {

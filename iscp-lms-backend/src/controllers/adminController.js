@@ -1,3 +1,14 @@
+/**
+ * adminController.js
+ * 
+ * Author: Marc Laurence Lapating
+ * Date: May 20, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Administrator controller handling user management, dashboard
+ * statistics, system settings, and administrative operations.
+ */
+
 const { pool } = require('../config/db');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');

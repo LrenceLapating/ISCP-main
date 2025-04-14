@@ -1,3 +1,14 @@
+/**
+ * Login.tsx
+ * 
+ * Author: Marc Laurence Lapating
+ * Date: March 28, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Login component that handles user authentication.
+ * Provides form for email/password login with validation and role-based redirection.
+ */
+
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 

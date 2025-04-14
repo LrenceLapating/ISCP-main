@@ -1,3 +1,14 @@
+/**
+ * SystemManagement.tsx
+ * 
+ * Author: Marc Laurence Lapating
+ * Date: April 13, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Administrator system management interface for configuring
+ * system settings, monitoring performance, and managing backups.
+ */
+
 import React from 'react';
 import {
   Box, Typography, Paper, Grid as MuiGrid, Card, CardContent, 

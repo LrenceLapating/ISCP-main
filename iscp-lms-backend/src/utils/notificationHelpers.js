@@ -1,4 +1,15 @@
-const pool = require('../config/db').pool;
+/**
+ * notificationHelpers.js
+ * 
+ * Author: Josiephous Pierre Dosdos
+ * Date: May 26, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Notification helper functions for creating, sending,
+ * and managing notifications across the application.
+ */
+
+const { pool } = require('../config/db');
 
 // Create a notification for a specific user
 const createNotification = async (userId, title, message, type, relatedId = null) => {

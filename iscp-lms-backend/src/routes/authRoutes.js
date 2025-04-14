@@ -1,3 +1,14 @@
+/**
+ * authRoutes.js
+ * 
+ * Author: Josiephous Pierre Dosdos
+ * Date: May 17, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Authentication routes for user registration, login,
+ * logout, and current user information retrieval.
+ */
+
 const express = require('express');
 const authController = require('../controllers/authController');
 const { verifyToken } = require('../middleware/auth');

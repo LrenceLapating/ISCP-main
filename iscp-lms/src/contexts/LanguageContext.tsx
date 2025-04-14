@@ -1,3 +1,14 @@
+/**
+ * LanguageContext.tsx
+ * 
+ * Author: MARC MAURICE M. COSTILLAS
+ * Date: March 27, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Language context provider for the application.
+ * Manages internationalization settings and language preferences.
+ */
+
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 
 // Define available languages

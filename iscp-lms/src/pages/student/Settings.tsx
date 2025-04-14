@@ -1,3 +1,14 @@
+/**
+ * Settings.tsx
+ * 
+ * Author: Marc Laurence Lapating
+ * Date: April 5, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Student settings page for managing user profile, preferences,
+ * security settings, and notification preferences.
+ */
+
 import React, { useState, useEffect, SyntheticEvent } from 'react';
 import StudentLayout from '../../components/StudentLayout';
 import {

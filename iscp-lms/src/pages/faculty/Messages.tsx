@@ -1,3 +1,14 @@
+/**
+ * Messages.tsx (Faculty)
+ * 
+ * Author: Marc Laurence Lapating
+ * Date: April 9, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Faculty messaging interface for communicating with
+ * students, other faculty members, and administrators.
+ */
+
 import React, { useState, useEffect, useRef } from 'react';
 import FacultyLayout from '../../components/FacultyLayout';
 import {

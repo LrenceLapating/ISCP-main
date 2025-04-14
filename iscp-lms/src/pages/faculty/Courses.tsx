@@ -1,3 +1,14 @@
+/**
+ * Courses.tsx (Faculty)
+ * 
+ * Author: Marc Laurence Lapating
+ * Date: April 7, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Faculty course management page for creating, editing,
+ * and managing course content and enrollments.
+ */
+
 import React, { useState, useEffect } from 'react';
 import FacultyLayout from '../../components/FacultyLayout';
 import {

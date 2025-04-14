@@ -1,3 +1,13 @@
+/**
+ * Header.tsx
+ * 
+ * Author: Marc Laurence Lapating
+ * Date: March 30, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Common header component with application branding,
+ * notification bell, and user profile menu.
+ */
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 

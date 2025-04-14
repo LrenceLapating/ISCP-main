@@ -1,3 +1,14 @@
+/**
+ * StudentDetailsDialog.tsx
+ * 
+ * Author: Marc Laurence Lapating
+ * Date: April 5, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Faculty component for displaying detailed student information
+ * including personal data, academic progress, and enrolled courses.
+ */
+
 import React from 'react';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,

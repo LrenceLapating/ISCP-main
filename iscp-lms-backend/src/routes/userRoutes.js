@@ -1,3 +1,14 @@
+/**
+ * userRoutes.js
+ * 
+ * Author: Marc Laurence Lapating
+ * Date: May 22, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: User management routes for handling user profiles,
+ * preferences, and account settings.
+ */
+
 const express = require('express');
 const router = express.Router();
 const { pool } = require('../config/db');

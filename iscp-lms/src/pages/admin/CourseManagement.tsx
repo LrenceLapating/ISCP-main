@@ -1,3 +1,14 @@
+/**
+ * CourseManagement.tsx
+ * 
+ * Author: Marc Laurence Lapating
+ * Date: April 12, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Administrator course management interface for overseeing
+ * all courses, approving new courses, and managing departments.
+ */
+
 import React, { useState, useEffect } from 'react';
 import {
   Box, Typography, Paper, Button, TextField, Dialog, DialogTitle,

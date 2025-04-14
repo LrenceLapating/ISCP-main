@@ -1,3 +1,14 @@
+/**
+ * Settings.tsx (Admin)
+ * 
+ * Author: Marc Laurence Lapating
+ * Date: April 13, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Administrator settings interface for configuring system
+ * preferences, account settings, and notification preferences.
+ */
+
 import React, { useState, useEffect } from 'react';
 import AdminLayout from '../../components/AdminLayout';
 import {

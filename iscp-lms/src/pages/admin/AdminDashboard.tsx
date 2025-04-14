@@ -1,3 +1,14 @@
+/**
+ * AdminDashboard.tsx
+ * 
+ * Author: Marc Laurence Lapating
+ * Date: April 11, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Administrator dashboard with system statistics, user metrics,
+ * course information, and system health monitoring.
+ */
+
 import React, { useEffect, useState } from 'react';
 import { Box, Typography, Grid, Paper, Card, CardContent, Divider, useTheme, alpha, CircularProgress } from '@mui/material';
 import AdminLayout from '../../components/AdminLayout';

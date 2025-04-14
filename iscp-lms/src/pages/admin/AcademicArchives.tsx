@@ -1,3 +1,14 @@
+/**
+ * AcademicArchives.tsx
+ * 
+ * Author: Marc Laurence Lapating
+ * Date: April 13, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Administrator academic archives management interface for
+ * archiving past academic terms and managing archived data.
+ */
+
 import React from 'react';
 import {
   Box, Typography, Paper, Grid as MuiGrid, 

@@ -1,3 +1,14 @@
+/**
+ * EditAssignment.tsx
+ * 
+ * Author: Marc Laurence Lapating
+ * Date: April 8, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Faculty assignment editing page for modifying existing
+ * assignment details, due dates, and attachments.
+ */
+
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import facultyService from "../../services/FacultyService";

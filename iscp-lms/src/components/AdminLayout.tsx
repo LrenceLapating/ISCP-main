@@ -1,3 +1,14 @@
+/**
+ * AdminLayout.tsx
+ * 
+ * Author: Marc Laurence Lapating
+ * Date: April 1, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Admin layout component providing navigation sidebar,
+ * header, and consistent layout structure for administrator pages.
+ */
+
 import React, { ReactNode, useState, useEffect } from 'react';
 import { 
   Box, 

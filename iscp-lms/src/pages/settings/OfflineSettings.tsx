@@ -1,3 +1,14 @@
+/**
+ * OfflineSettings.tsx
+ * 
+ * Author: Marc Laurence Lapating
+ * Date: April 6, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Settings page for configuring offline mode functionality,
+ * allowing students to download and access content without internet connection.
+ */
+
 import React from 'react';
 import { Box, Typography, Breadcrumbs, Link } from '@mui/material';
 import { NavigateNext, WifiOff } from '@mui/icons-material';

@@ -1,3 +1,14 @@
+/**
+ * uploadRoutes.js
+ * 
+ * Author: Marc Laurence Lapating
+ * Date: May 23, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: File upload routes for handling document, image, and
+ * other file uploads across the application.
+ */
+
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');

@@ -1,3 +1,14 @@
+/**
+ * Discussions.tsx
+ * 
+ * Author: Marc Laurence Lapating
+ * Date: April 10, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Faculty discussion board management page for creating
+ * and moderating course discussions.
+ */
+
 import React, { useState, useEffect } from 'react';
 import FacultyLayout from '../../components/FacultyLayout';
 import {

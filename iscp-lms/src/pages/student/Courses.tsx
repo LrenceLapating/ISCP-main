@@ -1,3 +1,14 @@
+/**
+ * Courses.tsx
+ * 
+ * Author: Marc Laurence Lapating
+ * Date: April 3, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Student courses page for viewing enrolled courses,
+ * course details, and materials.
+ */
+
 import React, { useState, useEffect } from 'react';
 import StudentLayout from '../../components/StudentLayout';
 import {

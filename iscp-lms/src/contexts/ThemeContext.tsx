@@ -1,3 +1,16 @@
+/**
+ * ThemeContext.tsx
+ * 
+ * Author: Marc Laurence Lapating
+ * Date: March 27, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Theme context provider for the application.
+ * Manages light/dark theme settings and persistence.
+ */
+
+
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { createTheme, ThemeProvider as MuiThemeProvider } from '@mui/material';
 

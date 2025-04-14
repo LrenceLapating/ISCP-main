@@ -1,3 +1,14 @@
+/**
+ * OfflineMode.tsx
+ * 
+ * Author: Marc Laurence Lapating
+ * Date: April 6, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Student offline mode page for managing content available
+ * when offline and syncing when connection is restored.
+ */
+
 import React from 'react';
 import StudentLayout from '../../components/StudentLayout';
 import { Container, Typography } from '@mui/material';

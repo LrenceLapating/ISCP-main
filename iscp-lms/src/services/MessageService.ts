@@ -1,3 +1,14 @@
+/**
+ * MessageService.ts
+ * 
+ * Author: Marc Laurence Lapating
+ * Date: April 2, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Service class that handles messaging functionality across user roles.
+ * Provides methods for sending, receiving, and managing messages between users.
+ */
+
 import axios from 'axios';
 
 export interface User {

@@ -1,3 +1,16 @@
+/**
+ * seedData.js
+ * 
+ * Author: Marc Laurence Lapating
+ * Date: May 16, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Database seeding utility for creating test data,
+ * sample users, courses, and demo content.
+ */
+
+const { pool } = require('../config/db');
+
 // Seed sample notifications
 const seedNotifications = async () => {
   try {

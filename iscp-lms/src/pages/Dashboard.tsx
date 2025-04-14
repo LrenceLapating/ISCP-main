@@ -1,3 +1,14 @@
+/**
+ * Dashboard.tsx
+ * 
+ * Author: Marc Laurence Lapating
+ * Date: April 3, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Student dashboard page showing course overview, upcoming assignments,
+ * recent announcements, and grade summaries.
+ */
+
 import React, { useState, useEffect } from 'react';
 import { 
   Typography, 

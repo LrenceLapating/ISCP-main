@@ -1,3 +1,14 @@
+/**
+ * messageController.js
+ * 
+ * Author: Josiephous Pierre Dosdos
+ * Date: May 25, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Message controller handling communication between users,
+ * including direct messages, group messages, and notification delivery.
+ */
+
 const { pool } = require('../config/db');
 
 /**

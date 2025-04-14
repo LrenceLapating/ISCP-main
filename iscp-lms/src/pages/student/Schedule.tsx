@@ -1,3 +1,14 @@
+/**
+ * Schedule.tsx
+ * 
+ * Author: Marc Laurence Lapating
+ * Date: April 6, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Student schedule page for viewing course timetables,
+ * upcoming classes, and academic calendar.
+ */
+
 import React, { useState, useEffect } from 'react';
 import StudentLayout from '../../components/StudentLayout';
 import {

@@ -1,3 +1,14 @@
+/**
+ * Students.tsx
+ * 
+ * Author: Marc Laurence Lapating
+ * Date: April 9, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Faculty student management page for viewing student
+ * progress, grades, and participation across courses.
+ */
+
 import React, { useState, useEffect } from 'react';
 import FacultyLayout from '../../components/FacultyLayout';
 import {

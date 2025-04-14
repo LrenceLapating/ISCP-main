@@ -1,3 +1,14 @@
+/**
+ * initDb.js
+ * 
+ * Author: Josiephous Pierre Dosdos
+ * Date: May 16, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Database initialization script creating schema,
+ * tables, indexes, and initial system configuration.
+ */
+
 const { pool } = require('../config/db');
 const bcrypt = require('bcrypt');
 

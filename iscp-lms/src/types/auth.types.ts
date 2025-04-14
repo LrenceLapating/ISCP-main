@@ -1,3 +1,14 @@
+/**
+ * auth.types.ts
+ * 
+ * Author: Josiephous Pierre Dosdos
+ * Date: May 16, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Authentication type definitions for handling user authentication,
+ * login/registration credentials, and auth state management.
+ */
+
 export interface User {
   id: string;
   fullName: string;

@@ -1,3 +1,14 @@
+/**
+ * archiveController.js
+ * 
+ * Author: Josiephous Pierre Dosdos
+ * Date: May 22, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Archive controller for managing academic archives, historical
+ * data, and legacy system records with backup and restore capabilities.
+ */
+
 const { pool } = require('../config/db');
 const fs = require('fs');
 const path = require('path');

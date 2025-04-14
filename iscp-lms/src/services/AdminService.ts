@@ -1,3 +1,15 @@
+/**
+ * AdminService.ts
+ * 
+ * Author: Marc Laurence Lapating
+ * Date: April 1, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Service class that handles all admin-related API calls and data management.
+ * This includes user management, course management, announcements, notifications,
+ * and system settings for administrators.
+ */
+
 import axios from 'axios';
 
 export interface UserSettings {

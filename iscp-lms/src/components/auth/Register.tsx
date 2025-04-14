@@ -1,3 +1,14 @@
+/**
+ * Register.tsx
+ * 
+ * Author: Marc Laurence Lapating
+ * Date: March 28, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Registration component for new user accounts.
+ * Handles form validation, role selection, and creates new user accounts.
+ */
+
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 

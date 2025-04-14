@@ -1,3 +1,14 @@
+/**
+ * UserManagement.tsx
+ * 
+ * Author: Marc Laurence Lapating
+ * Date: April 11, 2025
+ * Assignment: ISCP Learning Management System
+ * 
+ * Description: Administrator user management interface for creating, editing,
+ * and managing all system users across roles.
+ */
+
 import React, { useState, useEffect } from 'react';
 import {
   Box, Typography, Paper, Button, TextField, Dialog, DialogTitle, 
