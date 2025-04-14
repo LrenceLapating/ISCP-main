@@ -142,7 +142,7 @@ const Login: React.FC = () => {
             ISCP
           </Typography>
           <Typography variant="h5" sx={{ mb: 2 }}>
-            Intergalactic State College of the Philippines
+            International State College of the Philippines
           </Typography>
           <Typography variant="body1" sx={{ mb: 5 }}>
             Learning Management System
@@ -355,7 +355,7 @@ const Login: React.FC = () => {
           fontSize: '0.875rem',
         }}
       >
-        © {new Date().getFullYear()} ISCP Intergalactic Learning Management System
+        © {new Date().getFullYear()} ISCP International State College of the Philippines
       </Box>
     </Box>
   );

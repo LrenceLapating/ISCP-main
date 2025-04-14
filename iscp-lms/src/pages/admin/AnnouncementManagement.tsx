@@ -1,7 +1,7 @@
 /**
  * AnnouncementManagement.tsx
  * 
- * Author: Marc Laurence Lapating
+ * Author: MARC MAURICE M. COSTILLAS
  * Date: April 12, 2025
  * Assignment: ISCP Learning Management System
  * 
@@ -406,7 +406,6 @@ const AnnouncementManagement: React.FC = () => {
                   <MenuItem value="all">All Targets</MenuItem>
                   <MenuItem value="students">Students</MenuItem>
                   <MenuItem value="teachers">Teachers</MenuItem>
-                  <MenuItem value="admins">Admins</MenuItem>
                 </Select>
               </FormControl>
               
@@ -489,7 +488,6 @@ const AnnouncementManagement: React.FC = () => {
                         announcement.target === 'all' ? 'All Users' :
                         announcement.target === 'students' ? 'Students' :
                         announcement.target === 'teachers' ? 'Teachers' : 
-                        announcement.target === 'admins' ? 'Admins' : 
                         String(announcement.target)
                       }
                       size="small"
@@ -498,20 +496,17 @@ const AnnouncementManagement: React.FC = () => {
                           !announcement.target || announcement.target === 'all' ? alpha(theme.palette.primary.main, 0.1) :
                           announcement.target === 'students' ? alpha(theme.palette.success.main, 0.1) :
                           announcement.target === 'teachers' ? alpha(theme.palette.info.main, 0.1) :
-                          announcement.target === 'admins' ? alpha(theme.palette.warning.main, 0.1) :
                           alpha(theme.palette.secondary.main, 0.1),
                         color: 
                           !announcement.target || announcement.target === 'all' ? theme.palette.primary.main :
                           announcement.target === 'students' ? theme.palette.success.main :
                           announcement.target === 'teachers' ? theme.palette.info.main :
-                          announcement.target === 'admins' ? theme.palette.warning.main :
                           theme.palette.secondary.main,
                         border: '1px solid',
                         borderColor: 
                           !announcement.target || announcement.target === 'all' ? alpha(theme.palette.primary.main, 0.3) :
                           announcement.target === 'students' ? alpha(theme.palette.success.main, 0.3) :
                           announcement.target === 'teachers' ? alpha(theme.palette.info.main, 0.3) :
-                          announcement.target === 'admins' ? alpha(theme.palette.warning.main, 0.3) :
                           alpha(theme.palette.secondary.main, 0.3)
                       }}
                     />
@@ -680,7 +675,6 @@ const AnnouncementManagement: React.FC = () => {
                   <MenuItem value="all">All Users</MenuItem>
                   <MenuItem value="students">Students Only</MenuItem>
                   <MenuItem value="teachers">Teachers Only</MenuItem>
-                  <MenuItem value="admins">Admins Only</MenuItem>
                 </Select>
               </FormControl>
               
