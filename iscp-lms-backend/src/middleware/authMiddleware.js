@@ -2,7 +2,7 @@
  * authMiddleware.js
  * 
  * Author: Marc Laurence Lapating
- * Date: May 24, 2025
+ * Date: April 10, 2025
  * Assignment: ISCP Learning Management System
  * 
  * Description: Authentication middleware for verifying user authorization

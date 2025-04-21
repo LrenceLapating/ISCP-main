@@ -10,7 +10,7 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import AdminLayout from '../../components/AdminLayout';
+import FacultyLayout from '../../components/FacultyLayout';
 import {
   Container,
   Typography,
@@ -48,9 +48,7 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 import messageService, { Conversation, Message, Contact } from '../../services/MessageService';
-import { format } from 'date-fns';
 
-// Utility function to generate avatar background color
 const getAvatarBgColor = (id: number) => {
   const colors = [
     '#1976d2', // blue
@@ -291,40 +289,33 @@ const Messages: React.FC = () => {
         }
       }
       
-      const response = await messageService.createConversation(
-        [selectedUser.id],
-        undefined,
+      const initialMsg = messageInput.trim() ? messageInput : undefined;
+      const result = await messageService.createConversation(
+        [selectedUser.id], 
+        undefined, 
         'direct',
-        messageInput,
-        attachmentUrl,
-        attachmentType
+        initialMsg,
+        attachmentUrl || undefined,
+        attachmentType || undefined
       );
       
-      // If conversation already exists, select it
-      if (response.alreadyExists) {
-        const existingConversation = conversations.find(c => c.id === response.conversationId);
-        if (existingConversation) {
-          setSelectedConversation(existingConversation.id);
-          setMobileView('conversation');
-        } else {
-          // Reload conversations to get the one that already exists
-          const conversationsData = await messageService.getConversations();
-          setConversations(conversationsData);
-          setSelectedConversation(response.conversationId);
-          setMobileView('conversation');
-        }
-      } else {
-        // New conversation created, reload conversations
-        const conversationsData = await messageService.getConversations();
-        setConversations(conversationsData);
-        setSelectedConversation(response.conversationId);
-        setMobileView('conversation');
-      }
+      // Refresh conversations list
+      const conversationsData = await messageService.getConversations();
+      setConversations(conversationsData);
       
+      // Select the new conversation
+      setSelectedConversation(result.conversationId);
+      setMobileView('conversation');
       setMessageInput('');
-      setSelectedUser(null);
-      setNewMessageDialogOpen(false);
       setSelectedFile(null);
+      
+      // Close dialog
+      handleCloseNewMessageDialog();
+      
+      // Fetch messages for the new conversation
+      const messagesData = await messageService.getMessages(result.conversationId);
+      setMessages(messagesData);
+      
     } catch (error) {
       console.error('Error creating conversation:', error);
     } finally {
@@ -332,37 +323,57 @@ const Messages: React.FC = () => {
     }
   };
   
+  // Filter conversations based on search
+  const filteredConversations = conversations.filter(conv => {
+    const otherUser = conv.otherParticipant;
+    if (!otherUser) return false;
+    
+    return (
+      otherUser.fullName.toLowerCase().includes(searchInput.toLowerCase()) ||
+      (conv.lastMessage?.content || '').toLowerCase().includes(searchInput.toLowerCase())
+    );
+  });
+  
+  const selectedConversationDetails = selectedConversation 
+    ? conversations.find(c => c.id === selectedConversation) 
+    : null;
+  
+  // Add a function to simulate user typing (in a real app, this would use WebSockets)
   const handleTypingIndicator = (conversationId: number) => {
-    // Clear previous timeout if exists
-    if (typingTimeoutRef.current[conversationId]) {
-      clearTimeout(typingTimeoutRef.current[conversationId]);
+    if (!typingUsers[conversationId]) {
+      setTypingUsers(prev => ({ ...prev, [conversationId]: true }));
+      
+      // Clear any existing timeout
+      if (typingTimeoutRef.current[conversationId]) {
+        clearTimeout(typingTimeoutRef.current[conversationId]);
+      }
+      
+      // Set a timeout to clear the typing indicator after 3 seconds
+      typingTimeoutRef.current[conversationId] = setTimeout(() => {
+        setTypingUsers(prev => ({ ...prev, [conversationId]: false }));
+      }, 3000);
     }
-    
-    // Set typing indicator
-    setTypingUsers(prev => ({ ...prev, [conversationId]: true }));
-    
-    // Clear typing indicator after 3 seconds
-    typingTimeoutRef.current[conversationId] = setTimeout(() => {
-      setTypingUsers(prev => ({ ...prev, [conversationId]: false }));
-    }, 3000);
   };
   
+  // Format timestamp to be more user-friendly
   const formatMessageTime = (timestamp: string) => {
     const date = new Date(timestamp);
     const now = new Date();
-    const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+    const diff = now.getTime() - date.getTime();
+    const diffDays = Math.floor(diff / (1000 * 60 * 60 * 24));
     
     if (diffDays === 0) {
-      return format(date, 'h:mm a'); // Today: "3:45 PM"
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     } else if (diffDays === 1) {
       return 'Yesterday';
     } else if (diffDays < 7) {
-      return format(date, 'EEEE'); // Day of week: "Monday"
+      return date.toLocaleDateString([], { weekday: 'long' });
     } else {
-      return format(date, 'MMM d'); // Oct 12
+      return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
     }
   };
   
+  // Function to handle message search
   const handleMessageSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value;
     setMessageSearchQuery(query);
@@ -374,12 +385,13 @@ const Messages: React.FC = () => {
     }
     
     setIsSearchingMessages(true);
-    const results = messages.filter(message => 
-      message.content.toLowerCase().includes(query.toLowerCase())
+    const filtered = messages.filter(msg => 
+      msg.content.toLowerCase().includes(query.toLowerCase())
     );
-    setSearchedMessages(results);
+    setSearchedMessages(filtered);
   };
   
+  // File handling functions
   const handleFileSelect = () => {
     if (fileInputRef.current) {
       fileInputRef.current.click();
@@ -389,769 +401,747 @@ const Messages: React.FC = () => {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (files && files.length > 0) {
-      const file = files[0];
-      
-      // Check file size (max 10MB)
-      if (file.size > 10 * 1024 * 1024) {
-        alert('File size exceeds 10MB limit. Please select a smaller file.');
-        return;
-      }
-      
-      setSelectedFile(file);
+      setSelectedFile(files[0]);
+    }
+    
+    // Reset the file input so the same file can be selected again
+    if (event.target.value) {
+      event.target.value = '';
     }
   };
   
   const handleRemoveSelectedFile = () => {
     setSelectedFile(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
   };
   
   const handleOpenAttachment = (url: string) => {
-    window.open(url, '_blank');
+    const fullUrl = url.startsWith('http') ? url : `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}${url}`;
+    window.open(fullUrl, '_blank');
   };
   
   const renderMessage = (message: Message, index: number) => {
-    const isSender = message.sender_id === Number(authState.user?.id);
-    const showAvatar = !isSender;
-    const messageDate = new Date(message.created_at);
-    const formattedTime = format(messageDate, 'hh:mm a');
-    const formattedDate = format(messageDate, 'MMM dd, hh:mm a');
-  
+    const isCurrentUser = message.sender_id === (authState.user?.id || 0);
+    
     return (
-      <Box 
-        key={message.id} 
-        sx={{ 
-          display: 'flex', 
+      <Box
+        key={message.id}
+        sx={{
+          display: 'flex',
           flexDirection: 'column',
-          alignItems: isSender ? 'flex-end' : 'flex-start',
-          mb: 4,
-          width: '100%'
+          alignItems: isCurrentUser ? 'flex-end' : 'flex-start',
+          mb: 2,
+          maxWidth: '75%',
+          width: 'fit-content',
+          alignSelf: isCurrentUser ? 'flex-end' : 'flex-start',
+          mr: isCurrentUser ? 0 : 'auto',
+          ml: isCurrentUser ? 'auto' : 0
         }}
       >
-        <Box sx={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          mb: 0.5,
-          width: '100%',
-          justifyContent: isSender ? 'flex-end' : 'flex-start'
-        }}>
-          {!isSender && (
-            <>
-              <Typography 
-                variant="body2" 
-                sx={{ 
-                  color: 'rgba(255, 255, 255, 0.7)',
-                  fontSize: '0.85rem'
+        {!isCurrentUser && (
+          <Typography 
+            variant="caption" 
+            sx={{ ml: 1.5, mb: 0.5, color: 'rgba(255, 255, 255, 0.7)' }}
+          >
+            {message.sender_name}
+            {message.sender_campus && (
+              <Chip
+                label={message.sender_campus}
+                size="small"
+                sx={{
+                  fontSize: '0.6rem',
+                  height: 16,
+                  ml: 1,
+                  bgcolor: 'rgba(156, 39, 176, 0.2)',
+                  color: 'secondary.light',
                 }}
-              >
-                {message.sender_name}
-              </Typography>
-              {message.sender_campus && (
-                <Chip
-                  label={message.sender_campus}
-                  size="small"
-                  sx={{
-                    height: 18,
-                    fontSize: '0.7rem',
-                    ml: 1,
-                    backgroundColor: 'rgba(255, 153, 51, 0.8)',
-                    color: 'white',
-                    '& .MuiChip-label': {
-                      px: 1
-                    }
-                  }}
-                />
-              )}
-            </>
-          )}
-        </Box>
-        
-        <Box sx={{ 
-          display: 'flex', 
-          alignItems: 'flex-end',
-          justifyContent: isSender ? 'flex-end' : 'flex-start',
-          width: '100%'
-        }}>
-          {showAvatar && (
-            <Avatar 
-              src={message.sender_profile_image || undefined}
-              sx={{ 
-                width: 38, 
-                height: 38,
-                bgcolor: getAvatarBgColor(message.sender_id),
-                mr: 1
-              }}
-            >
-              {message.sender_name.substring(0, 1).toUpperCase()}
-            </Avatar>
-          )}
-          
-          <Box sx={{ maxWidth: '70%' }}>
-            <Paper 
-              elevation={0}
-              sx={{ 
-                p: 2,
-                borderRadius: 1,
-                bgcolor: isSender ? '#1976d2' : 'rgba(255, 255, 255, 0.1)',
-                color: 'white',
-                wordBreak: 'break-word',
-                whiteSpace: 'pre-wrap',
-                fontSize: '0.9rem',
-                minWidth: 40,
-              }}
-            >
-              {message.content}
-            </Paper>
-            
-            {message.attachment_url && (
-              <Box 
-                sx={{ 
-                  mt: 1,
-                  p: 1.5,
-                  borderRadius: 1,
-                  backgroundColor: 'rgba(25, 118, 210, 0.2)',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1,
-                  border: '1px solid rgba(25, 118, 210, 0.3)',
-                  '&:hover': {
-                    backgroundColor: 'rgba(25, 118, 210, 0.3)'
-                  }
-                }}
-                onClick={() => handleOpenAttachment(message.attachment_url!)}
-              >
-                <Box 
-                  sx={{ 
-                    p: 1,
-                    backgroundColor: 'white',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    borderRadius: 1
-                  }}
-                >
-                  {message.attachment_type?.startsWith('image/') ? (
-                    <Image fontSize="small" sx={{ color: '#1976d2' }} />
-                  ) : (
-                    <InsertDriveFile fontSize="small" sx={{ color: '#1976d2' }} />
-                  )}
-                </Box>
-                <Box>
-                  <Typography variant="caption" sx={{ color: 'white', fontWeight: 500 }}>
-                    Attachment
-                  </Typography>
-                </Box>
-              </Box>
+              />
             )}
-          </Box>
-        </Box>
-        
-        <Typography 
-          variant="caption" 
-          sx={{ 
-            mt: 0.5,
-            display: 'block',
-            textAlign: isSender ? 'right' : 'left',
-            color: 'rgba(255, 255, 255, 0.5)',
-            pl: isSender ? 0 : 6,
-            pr: isSender ? 1 : 0,
-            fontSize: '0.7rem'
+          </Typography>
+        )}
+        <Paper
+          elevation={0}
+          sx={{
+            p: 2,
+            bgcolor: isCurrentUser ? 'primary.main' : 'rgba(255, 255, 255, 0.1)',
+            color: isCurrentUser ? '#fff' : 'rgba(255, 255, 255, 0.9)',
+            borderRadius: 2,
+            width: 'fit-content',
+            maxWidth: '100%',
+            wordWrap: 'break-word'
           }}
         >
-          {formattedTime}
-        </Typography>
+          {message.content && (
+            <Typography>{message.content}</Typography>
+          )}
+          
+          {message.attachment_url && (
+            <Box 
+              sx={{ 
+                mt: message.content ? 1 : 0, 
+                p: 1, 
+                bgcolor: isCurrentUser ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.15)', 
+                borderRadius: 1,
+                display: 'flex',
+                alignItems: 'center',
+                cursor: 'pointer'
+              }}
+              onClick={() => handleOpenAttachment(message.attachment_url || '')}
+            >
+              <InsertDriveFile sx={{ mr: 1 }} />
+              <Typography variant="body2">
+                Attachment
+              </Typography>
+            </Box>
+          )}
+        </Paper>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: isCurrentUser ? 'flex-end' : 'flex-start',
+            mt: 0.5,
+            mx: 1
+          }}
+        >
+          <Typography
+            variant="caption"
+            sx={{
+              color: 'rgba(255, 255, 255, 0.5)',
+            }}
+          >
+            {new Date(message.created_at).toLocaleString([], {
+              hour: '2-digit',
+              minute: '2-digit',
+              month: 'short',
+              day: 'numeric'
+            })}
+          </Typography>
+          {isCurrentUser && (
+            <Box
+              component="span"
+              sx={{
+                ml: 0.5,
+                color: message.read_by_all ? 'success.light' : 'rgba(255, 255, 255, 0.3)',
+                fontSize: '0.7rem',
+                display: 'flex',
+                alignItems: 'center'
+              }}
+            >
+              {message.read_by_all ? (
+                <Box component="span" sx={{ ml: 0.5, display: 'flex', alignItems: 'center' }}>
+                  <span style={{ fontSize: '14px', marginLeft: '2px' }}>✓✓</span>
+                </Box>
+              ) : message.read_by && message.read_by.length > 0 ? (
+                <Box component="span" sx={{ ml: 0.5, display: 'flex', alignItems: 'center' }}>
+                  <span style={{ fontSize: '14px', marginLeft: '2px' }}>✓</span>
+                </Box>
+              ) : null}
+            </Box>
+          )}
+        </Box>
       </Box>
     );
   };
-
+  
   return (
-    <AdminLayout title="Messages">
-      <Box sx={{ 
-        display: 'flex', 
-        flexDirection: 'column', 
-        height: 'calc(100vh - 64px)',
-        bgcolor: '#0a1128',
-        borderRadius: 1,
-        overflow: 'hidden'
-      }}>
-        {/* Messages header with subtitle */}
-        <Box sx={{ 
-          p: 3, 
-          pb: 1,
-          bgcolor: '#0a1128'
-        }}>
-          <Typography variant="h4" sx={{ color: 'white', fontWeight: 400, mb: 1 }}>
+    <FacultyLayout title="Messages">
+      <Container maxWidth="lg" sx={{ mt: 2, mb: 4 }}>
+        {/* Header */}
+        <Box sx={{ mb: 4 }}>
+          <Typography 
+            variant="h4" 
+            component="h1" 
+            sx={{ 
+              fontWeight: 600, 
+              color: '#fff',
+              mb: 1
+            }}
+          >
             Messages
           </Typography>
-          <Typography variant="body1" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-            Communicate with your administrators and staff
+          <Typography variant="subtitle1" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+            Communicate with your students and colleagues
           </Typography>
         </Box>
         
-        <Box sx={{ 
-          display: 'flex', 
-          height: 'calc(100% - 80px)',
-          flexDirection: { xs: 'column', md: 'row' }
-        }}>
-          {/* Conversations List */}
+        {/* Messages Interface */}
+        <Paper 
+          elevation={0} 
+          sx={{ 
+            borderRadius: 2,
+            overflow: 'hidden',
+            bgcolor: 'rgba(255, 255, 255, 0.08)',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            height: 'calc(100vh - 240px)',
+            minHeight: 500,
+            display: 'flex',
+            flexDirection: 'row',
+          }}
+        >
+          {/* Left Panel (Contacts) */}
           <Box 
             sx={{ 
               width: { xs: '100%', md: 320 },
               borderRight: '1px solid rgba(255, 255, 255, 0.1)',
-              bgcolor: '#0e1b3d',
-              display: { xs: mobileView === 'contacts' ? 'flex' : 'none', md: 'flex' },
+              display: { 
+                xs: mobileView === 'contacts' ? 'flex' : 'none', 
+                md: 'flex' 
+              },
               flexDirection: 'column',
-              height: '100%'
+              height: '100%',
             }}
           >
-            <Box sx={{ 
-              p: 2, 
-              borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between'
-            }}>
-              <Typography variant="h6" sx={{ color: 'white' }}>Messages</Typography>
-              <IconButton 
-                color="primary"
-                onClick={handleOpenNewMessageDialog}
-                sx={{ ml: 1 }}
-              >
-                <Create sx={{ color: 'white' }} />
-              </IconButton>
-            </Box>
-            
-            <Box sx={{ 
-              p: 2, 
-              borderBottom: '1px solid rgba(255, 255, 255, 0.1)' 
-            }}>
+            {/* Search Bar */}
+            <Box sx={{ p: 2, borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
               <TextField
-                placeholder="Search conversations"
-                fullWidth
+                placeholder="Search messages..."
+                variant="outlined"
                 size="small"
+                fullWidth
                 value={searchInput}
                 onChange={handleSearchChange}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    '& fieldset': {
-                      borderColor: 'rgba(255, 255, 255, 0.2)',
-                    },
-                    '&:hover fieldset': {
-                      borderColor: 'rgba(255, 255, 255, 0.3)',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: 'primary.main',
-                    },
-                    color: 'white',
-                  },
-                  '& .MuiInputLabel-root': {
-                    color: 'rgba(255, 255, 255, 0.7)',
-                  },
-                  '& .MuiInputBase-input::placeholder': {
-                    color: 'rgba(255, 255, 255, 0.5)',
-                    opacity: 1
-                  },
-                }}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
                       <Search sx={{ color: 'rgba(255, 255, 255, 0.7)' }} />
                     </InputAdornment>
-                  )
+                  ),
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton size="small" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                        <FilterList />
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                  sx: {
+                    color: '#fff',
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'rgba(255, 255, 255, 0.2)',
+                    },
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'rgba(255, 255, 255, 0.3)',
+                    },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'primary.main',
+                    },
+                  }
                 }}
               />
             </Box>
             
+            {/* Conversations List */}
             <List sx={{ 
-              overflowY: 'auto',
-              flexGrow: 1,
-              p: 0
+              flexGrow: 1, 
+              overflowY: 'auto', 
+              p: 0,
+              '&::-webkit-scrollbar': {
+                width: '8px',
+              },
+              '&::-webkit-scrollbar-track': {
+                background: 'rgba(0, 0, 0, 0.1)',
+              },
+              '&::-webkit-scrollbar-thumb': {
+                background: 'rgba(255, 255, 255, 0.2)',
+                borderRadius: '4px',
+              },
+              '&::-webkit-scrollbar-thumb:hover': {
+                background: 'rgba(255, 255, 255, 0.3)',
+              },
             }}>
               {loading ? (
-                <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-                  <CircularProgress size={24} />
+                <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+                  <CircularProgress size={24} sx={{ color: 'rgba(255, 255, 255, 0.7)' }} />
+                </Box>
+              ) : filteredConversations.length === 0 ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+                  <Typography sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                    No conversations found
+                  </Typography>
                 </Box>
               ) : (
-                conversations.length === 0 ? (
-                  <Box sx={{ p: 3, textAlign: 'center' }}>
-                    <Typography color="rgba(255, 255, 255, 0.7)">
-                      No conversations yet
-                    </Typography>
-                    <Button 
-                      variant="contained" 
-                      sx={{ mt: 2, textTransform: 'uppercase' }}
-                      onClick={handleOpenNewMessageDialog}
-                    >
-                      Start a new conversation
-                    </Button>
-                  </Box>
-                ) : (
-                  conversations
-                    .filter(conv => 
-                      !searchInput || 
-                      (conv.otherParticipant?.fullName?.toLowerCase().includes(searchInput.toLowerCase())) ||
-                      (conv.title?.toLowerCase().includes(searchInput.toLowerCase()))
-                    )
-                    .map(conversation => (
-                      <React.Fragment key={conversation.id}>
-                        <ListItem 
-                          alignItems="flex-start"
-                          onClick={() => handleConversationSelect(conversation.id)}
-                          sx={{ 
-                            py: 2,
-                            px: 2,
-                            borderLeft: selectedConversation === conversation.id 
-                              ? '4px solid'
-                              : '4px solid transparent',
-                            borderLeftColor: 'primary.main',
-                            bgcolor: selectedConversation === conversation.id 
-                              ? 'rgba(25, 118, 210, 0.15)'
-                              : 'transparent',
-                            '&:hover': {
-                              bgcolor: 'rgba(255, 255, 255, 0.05)',
-                              cursor: 'pointer'
-                            }
-                          }}
-                        >
-                          <ListItemAvatar>
-                            <Badge
-                              overlap="circular"
-                              badgeContent={conversation.unreadCount > 0 ? conversation.unreadCount : 0}
-                              color="primary"
-                              invisible={conversation.unreadCount === 0}
+                filteredConversations.map((conv) => {
+                  const otherUser = conv.otherParticipant;
+                  if (!otherUser) return null;
+                  
+                  return (
+                    <React.Fragment key={conv.id}>
+                      <ListItem 
+                        alignItems="flex-start"
+                        sx={{ 
+                          px: 2, 
+                          py: 1,
+                          cursor: 'pointer',
+                          bgcolor: selectedConversation === conv.id ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+                          '&:hover': { 
+                            bgcolor: selectedConversation === conv.id ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.05)' 
+                          }
+                        }}
+                        onClick={() => handleConversationSelect(conv.id)}
+                      >
+                        <ListItemAvatar>
+                          <Badge
+                            overlap="circular"
+                            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                            variant="dot"
+                            color={otherUser.status === 'online' ? 'success' : 'default'}
+                          >
+                            <Avatar 
+                              alt={otherUser.fullName || 'User'} 
+                              src={otherUser.profileImage || undefined}
+                              sx={{ 
+                                width: 48, 
+                                height: 48,
+                                bgcolor: otherUser.profileImage ? undefined : getAvatarBgColor(otherUser.id)
+                              }}
                             >
-                              <Avatar 
-                                src={conversation.otherParticipant?.profileImage || undefined}
+                              {(otherUser.fullName || 'U').charAt(0)}
+                            </Avatar>
+                          </Badge>
+                        </ListItemAvatar>
+                        <ListItemText
+                          primary={
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <Typography variant="subtitle1" sx={{ color: '#fff', fontWeight: 500 }}>
+                                {otherUser.fullName}
+                              </Typography>
+                              <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+                                {formatMessageTime(conv.updatedAt)}
+                              </Typography>
+                            </Box>
+                          }
+                          secondary={
+                            <Box>
+                              <Typography 
+                                variant="body2" 
                                 sx={{ 
-                                  bgcolor: getAvatarBgColor(conversation.id),
-                                  width: 40,
-                                  height: 40
+                                  color: 'rgba(255, 255, 255, 0.7)',
+                                  mb: 0.5,
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  flexWrap: 'wrap'
                                 }}
                               >
-                                {conversation.otherParticipant?.fullName?.charAt(0).toUpperCase() || 'U'}
-                              </Avatar>
-                            </Badge>
-                          </ListItemAvatar>
-                          <ListItemText
-                            primary={
-                              <Box sx={{ 
-                                display: 'flex', 
-                                justifyContent: 'space-between',
-                                alignItems: 'flex-start' 
-                              }}>
-                                <Typography 
-                                  component="span" 
-                                  variant="subtitle2"
-                                  sx={{ 
-                                    fontWeight: conversation.unreadCount > 0 ? 600 : 400,
-                                    color: conversation.unreadCount > 0 ? 'white' : 'rgba(255, 255, 255, 0.9)'
-                                  }}
-                                >
-                                  {conversation.otherParticipant?.fullName || 'Unknown'}
-                                </Typography>
-                                <Typography 
-                                  component="span" 
-                                  variant="caption" 
+                                <Chip 
+                                  label={otherUser.role} 
+                                  size="small" 
                                   sx={{ 
                                     fontSize: '0.7rem',
-                                    color: 'rgba(255, 255, 255, 0.6)',
-                                    ml: 1
+                                    height: 20,
+                                    mr: 1,
+                                    mb: 0.5,
+                                    bgcolor: otherUser.role === 'student' ? 'rgba(25, 118, 210, 0.2)' : 'rgba(76, 175, 80, 0.2)', 
+                                    color: otherUser.role === 'student' ? 'primary.light' : 'success.light',
+                                  }}
+                                />
+                                {otherUser.campus && (
+                                  <Chip 
+                                    label={otherUser.campus} 
+                                    size="small" 
+                                    sx={{ 
+                                      fontSize: '0.7rem',
+                                      height: 20,
+                                      mr: 1,
+                                      mb: 0.5,
+                                      bgcolor: 'rgba(156, 39, 176, 0.2)',
+                                      color: 'secondary.light',
+                                    }}
+                                  />
+                                )}
+                                <Typography 
+                                  variant="body2" 
+                                  sx={{ 
+                                    color: 'rgba(255, 255, 255, 0.7)',
+                                    fontSize: '0.75rem',
+                                    display: 'inline-block',
+                                    whiteSpace: 'nowrap',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    maxWidth: '180px'
                                   }}
                                 >
-                                  {conversation.lastMessage && formatMessageTime(conversation.lastMessage.created_at)}
+                                  {otherUser.email}
                                 </Typography>
-                              </Box>
-                            }
-                            secondary={
-                              <Box>
-                                <Box sx={{ display: 'flex', gap: 0.5, my: 0.7 }}>
-                                  {conversation.otherParticipant?.role && (
-                                    <Chip
-                                      label={conversation.otherParticipant.role}
-                                      size="small"
-                                      sx={{
-                                        height: 20,
-                                        fontSize: '0.7rem',
-                                        backgroundColor: conversation.otherParticipant.role === 'teacher' ? '#2e7d32' : 
-                                                        conversation.otherParticipant.role === 'student' ? '#1976d2' : 
-                                                        conversation.otherParticipant.role === 'admin' ? '#d32f2f' : 'grey',
-                                        color: 'white',
-                                        '& .MuiChip-label': {
-                                          px: 1
-                                        }
-                                      }}
-                                    />
-                                  )}
-                                  
-                                  {conversation.otherParticipant?.campus && (
-                                    <Chip
-                                      label={conversation.otherParticipant.campus}
-                                      size="small"
-                                      sx={{
-                                        height: 20,
-                                        fontSize: '0.7rem',
-                                        backgroundColor: 'rgba(255, 153, 51, 0.8)',
-                                        color: 'white',
-                                        '& .MuiChip-label': {
-                                          px: 1
-                                        }
-                                      }}
-                                    />
-                                  )}
-                                </Box>
+                              </Typography>
+                              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <Typography 
-                                  component="span"
-                                  variant="body2"
+                                  variant="body2" 
                                   sx={{ 
-                                    display: 'block',
-                                    fontWeight: conversation.unreadCount > 0 ? 600 : 'inherit',
-                                    color: conversation.unreadCount > 0 ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 0.6)',
+                                    color: conv.unreadCount > 0 ? '#fff' : 'rgba(255, 255, 255, 0.7)',
+                                    fontWeight: conv.unreadCount > 0 ? 500 : 400,
                                     overflow: 'hidden',
                                     textOverflow: 'ellipsis',
                                     whiteSpace: 'nowrap',
-                                    maxWidth: '100%',
-                                    fontSize: '0.8rem'
+                                    maxWidth: '180px'
                                   }}
                                 >
-                                  {conversation.lastMessage?.content || 'No messages yet'}
+                                  {typingUsers[conv.id] ? (
+                                    <Box component="span" sx={{ color: '#2196f3', fontStyle: 'italic' }}>
+                                      typing...
+                                    </Box>
+                                  ) : (
+                                    conv.lastMessage?.content || 'No messages yet'
+                                  )}
                                 </Typography>
+                                {conv.unreadCount > 0 && (
+                                  <Badge 
+                                    badgeContent={conv.unreadCount} 
+                                    color="primary"
+                                    sx={{ ml: 1 }}
+                                  />
+                                )}
                               </Box>
-                            }
-                          />
-                        </ListItem>
-                        <Divider component="li" sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />
-                      </React.Fragment>
-                    ))
-                )
+                            </Box>
+                          }
+                        />
+                      </ListItem>
+                      <Divider component="li" sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+                    </React.Fragment>
+                  );
+                })
               )}
             </List>
+            
+            {/* New Message Button */}
+            <Box sx={{ p: 2, borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
+              <Button
+                fullWidth
+                variant="contained"
+                startIcon={<Create />}
+                onClick={handleOpenNewMessageDialog}
+                sx={{ 
+                  bgcolor: 'rgba(255, 255, 255, 0.1)',
+                  color: '#fff',
+                  '&:hover': {
+                    bgcolor: 'rgba(255, 255, 255, 0.2)',
+                  },
+                  borderRadius: 2,
+                  py: 1
+                }}
+              >
+                New Message
+              </Button>
+            </Box>
           </Box>
           
-          {/* Messages Area */}
-          <Box sx={{ 
-            flexGrow: 1,
-            bgcolor: '#0d1631',
-            display: { xs: mobileView === 'conversation' ? 'flex' : 'none', md: 'flex' },
-            flexDirection: 'column',
-            height: '100%',
-            position: 'relative'
-          }}>
-            {selectedConversation ? (
+          {/* Right Panel (Conversation) */}
+          <Box 
+            sx={{ 
+              flexGrow: 1, 
+              display: { 
+                xs: mobileView === 'conversation' ? 'flex' : 'none', 
+                md: 'flex' 
+              },
+              flexDirection: 'column',
+              height: '100%',
+              position: 'relative'
+            }}
+          >
+            {/* Mobile back button */}
+            {mobileView === 'conversation' && (
+              <Box 
+                sx={{ 
+                  position: 'absolute', 
+                  top: 8, 
+                  left: 8, 
+                  zIndex: 10,
+                  display: { xs: 'block', md: 'none' }
+                }}
+              >
+                <IconButton onClick={handleBackToContacts} sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                  <ArrowBack />
+                </IconButton>
+              </Box>
+            )}
+            
+            {selectedConversation && selectedConversationDetails ? (
               <>
                 {/* Conversation Header */}
                 <Box sx={{ 
-                  p: 2,
+                  p: 2, 
                   borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
                   display: 'flex',
                   alignItems: 'center',
-                  bgcolor: '#0e1b3d'
+                  justifyContent: 'space-between'
                 }}>
-                  <IconButton 
-                    sx={{ 
-                      mr: 1,
-                      display: { xs: 'flex', md: 'none' },
-                      color: 'white'
-                    }}
-                    onClick={handleBackToContacts}
-                  >
-                    <ArrowBack />
-                  </IconButton>
-                  
-                  {conversations.find(c => c.id === selectedConversation)?.otherParticipant && (
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
                     <Avatar 
-                      src={conversations.find(c => c.id === selectedConversation)?.otherParticipant?.profileImage || undefined}
+                      alt={selectedConversationDetails.otherParticipant?.fullName || 'User'} 
+                      src={selectedConversationDetails.otherParticipant?.profileImage || undefined}
                       sx={{ 
+                        width: 40, 
+                        height: 40, 
                         mr: 2,
-                        bgcolor: getAvatarBgColor(selectedConversation)
+                        bgcolor: selectedConversationDetails.otherParticipant?.profileImage 
+                          ? undefined 
+                          : getAvatarBgColor(selectedConversationDetails.otherParticipant?.id || 0)
                       }}
                     >
-                      {conversations.find(c => c.id === selectedConversation)?.otherParticipant?.fullName?.charAt(0).toUpperCase() || 'U'}
+                      {(selectedConversationDetails.otherParticipant?.fullName || 'U').charAt(0)}
                     </Avatar>
-                  )}
-                  
-                  <Box sx={{ flexGrow: 1 }}>
-                    <Typography variant="subtitle1" sx={{ color: 'white' }}>
-                      {conversations.find(c => c.id === selectedConversation)?.otherParticipant?.fullName || 'Unknown'}
-                    </Typography>
-                    <Box sx={{ display: 'flex', gap: 0.5, mt: 0.5 }}>
-                      {conversations.find(c => c.id === selectedConversation)?.otherParticipant?.role && (
-                        <Chip
-                          label={conversations.find(c => c.id === selectedConversation)?.otherParticipant?.role}
-                          size="small"
-                          sx={{
-                            height: 20,
-                            fontSize: '0.7rem',
-                            backgroundColor: 
-                              conversations.find(c => c.id === selectedConversation)?.otherParticipant?.role === 'teacher' ? '#2e7d32' : 
-                              conversations.find(c => c.id === selectedConversation)?.otherParticipant?.role === 'student' ? '#1976d2' : 
-                              conversations.find(c => c.id === selectedConversation)?.otherParticipant?.role === 'admin' ? '#d32f2f' : 'grey',
-                            color: 'white',
-                            '& .MuiChip-label': {
-                              px: 1
-                            }
-                          }}
-                        />
-                      )}
-                      
-                      {conversations.find(c => c.id === selectedConversation)?.otherParticipant?.campus && (
-                        <Chip
-                          label={conversations.find(c => c.id === selectedConversation)?.otherParticipant?.campus}
-                          size="small"
-                          sx={{
-                            height: 20,
-                            fontSize: '0.7rem',
-                            backgroundColor: 'rgba(255, 153, 51, 0.8)',
-                            color: 'white',
-                            '& .MuiChip-label': {
-                              px: 1
-                            }
-                          }}
-                        />
-                      )}
+                    
+                    <Box>
+                      <Typography variant="subtitle1" sx={{ color: '#fff', fontWeight: 500 }}>
+                        {selectedConversationDetails.otherParticipant?.fullName}
+                      </Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)', mr: 1 }}>
+                          {selectedConversationDetails.otherParticipant?.role}
+                        </Typography>
+                        {selectedConversationDetails.otherParticipant?.campus && (
+                          <Chip 
+                            label={selectedConversationDetails.otherParticipant.campus} 
+                            size="small" 
+                            sx={{ 
+                              fontSize: '0.7rem',
+                              height: 20,
+                              bgcolor: 'rgba(156, 39, 176, 0.2)',
+                              color: 'secondary.light',
+                            }}
+                          />
+                        )}
+                      </Box>
                     </Box>
                   </Box>
                   
-                  <TextField
-                    placeholder="Search in conversation"
-                    size="small"
-                    value={messageSearchQuery}
-                    onChange={handleMessageSearch}
-                    sx={{ 
-                      width: 220,
-                      display: { xs: 'none', sm: 'block' },
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: 2,
-                        '& fieldset': {
-                          borderColor: 'rgba(255, 255, 255, 0.2)',
-                        },
-                        '&:hover fieldset': {
-                          borderColor: 'rgba(255, 255, 255, 0.3)',
-                        },
-                        '&.Mui-focused fieldset': {
-                          borderColor: 'primary.main',
-                        },
-                        color: 'white',
-                        backgroundColor: 'rgba(255, 255, 255, 0.05)'
-                      },
-                      '& .MuiInputLabel-root': {
-                        color: 'rgba(255, 255, 255, 0.7)',
-                      },
-                      '& .MuiInputBase-input::placeholder': {
-                        color: 'rgba(255, 255, 255, 0.5)',
-                        opacity: 1
-                      },
-                    }}
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <Search sx={{ color: 'rgba(255, 255, 255, 0.7)' }} />
-                        </InputAdornment>
-                      )
-                    }}
-                  />
-                  
-                  <IconButton sx={{ color: 'white' }}>
-                    <MoreVert />
-                  </IconButton>
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    {/* Search Messages Button */}
+                    <IconButton 
+                      onClick={() => setIsSearchingMessages(!isSearchingMessages)}
+                      sx={{ 
+                        color: isSearchingMessages ? 'primary.main' : 'rgba(255, 255, 255, 0.7)',
+                        mr: 1
+                      }}
+                    >
+                      <Search />
+                    </IconButton>
+                    <IconButton sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                      <MoreVert />
+                    </IconButton>
+                  </Box>
                 </Box>
                 
-                {/* Messages */}
+                {/* Message Search Bar - shown when searching */}
+                {isSearchingMessages && (
+                  <Box sx={{ p: 1, borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                    <TextField
+                      placeholder="Search in conversation..."
+                      variant="outlined"
+                      size="small"
+                      fullWidth
+                      value={messageSearchQuery}
+                      onChange={handleMessageSearch}
+                      autoFocus
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <Search sx={{ color: 'rgba(255, 255, 255, 0.7)' }} />
+                          </InputAdornment>
+                        ),
+                        endAdornment: messageSearchQuery && (
+                          <InputAdornment position="end">
+                            <IconButton 
+                              size="small" 
+                              onClick={() => {
+                                setMessageSearchQuery('');
+                                setIsSearchingMessages(false);
+                                setSearchedMessages([]);
+                              }}
+                            >
+                              <Close sx={{ color: 'rgba(255, 255, 255, 0.7)' }} />
+                            </IconButton>
+                          </InputAdornment>
+                        ),
+                        sx: {
+                          color: '#fff',
+                          '& .MuiOutlinedInput-notchedOutline': {
+                            borderColor: 'rgba(255, 255, 255, 0.2)',
+                          },
+                          '&:hover .MuiOutlinedInput-notchedOutline': {
+                            borderColor: 'rgba(255, 255, 255, 0.3)',
+                          },
+                          '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                            borderColor: 'primary.main',
+                          },
+                        }
+                      }}
+                    />
+                    {messageSearchQuery && (
+                      <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.7)', mt: 0.5, display: 'block' }}>
+                        {searchedMessages.length} {searchedMessages.length === 1 ? 'result' : 'results'} found
+                      </Typography>
+                    )}
+                  </Box>
+                )}
+                
+                {/* Conversation Messages */}
                 <Box sx={{ 
-                  flexGrow: 1,
+                  flexGrow: 1, 
                   overflowY: 'auto',
                   p: 3,
-                  bgcolor: '#0d1631'
+                  display: 'flex',
+                  flexDirection: 'column',
+                  '&::-webkit-scrollbar': {
+                    width: '8px',
+                  },
+                  '&::-webkit-scrollbar-track': {
+                    background: 'rgba(0, 0, 0, 0.1)',
+                  },
+                  '&::-webkit-scrollbar-thumb': {
+                    background: 'rgba(255, 255, 255, 0.2)',
+                    borderRadius: '4px',
+                  },
+                  '&::-webkit-scrollbar-thumb:hover': {
+                    background: 'rgba(255, 255, 255, 0.3)',
+                  },
                 }}>
-                  {isSearchingMessages ? (
-                    searchedMessages.length > 0 ? (
-                      <>
-                        <Paper 
-                          elevation={0} 
-                          sx={{ 
-                            p: 2, 
-                            mb: 2, 
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            bgcolor: 'rgba(25, 118, 210, 0.15)',
-                            color: 'white'
-                          }}
-                        >
-                          <Typography variant="body2">
-                            Found {searchedMessages.length} messages matching "{messageSearchQuery}"
-                          </Typography>
-                          <IconButton 
-                            size="small"
-                            sx={{ color: 'white' }}
-                            onClick={() => {
-                              setMessageSearchQuery('');
-                              setIsSearchingMessages(false);
-                            }}
-                          >
-                            <Close />
-                          </IconButton>
-                        </Paper>
-                        {searchedMessages.map((message, index) => renderMessage(message, index))}
-                      </>
-                    ) : (
-                      <Paper 
-                        elevation={0} 
-                        sx={{ 
-                          p: 2, 
-                          mb: 2, 
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          bgcolor: 'rgba(25, 118, 210, 0.15)',
-                          color: 'white'
-                        }}
-                      >
-                        <Typography variant="body2">
-                          No messages found matching "{messageSearchQuery}"
+                  {messages.length === 0 ? (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+                      <Typography sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                        No messages yet. Start the conversation!
+                      </Typography>
+                    </Box>
+                  ) : messageSearchQuery && isSearchingMessages ? (
+                    searchedMessages.length === 0 ? (
+                      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', p: 4 }}>
+                        <Typography sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                          No messages matching "{messageSearchQuery}"
                         </Typography>
-                        <IconButton 
-                          size="small"
-                          sx={{ color: 'white' }} 
-                          onClick={() => {
-                            setMessageSearchQuery('');
-                            setIsSearchingMessages(false);
-                          }}
-                        >
-                          <Close />
-                        </IconButton>
-                      </Paper>
+                      </Box>
+                    ) : (
+                      searchedMessages.map((message) => renderMessage(message, messages.indexOf(message)))
                     )
                   ) : (
-                    messages.map((message, index) => renderMessage(message, index))
+                    messages.map((message) => renderMessage(message, messages.indexOf(message)))
                   )}
                   <div ref={messagesEndRef} />
                 </Box>
                 
                 {/* Message Input */}
                 <Box sx={{ 
-                  p: 2,
+                  p: 2, 
                   borderTop: '1px solid rgba(255, 255, 255, 0.1)',
-                  bgcolor: '#0e1b3d',
                   display: 'flex',
-                  alignItems: 'flex-end'
+                  flexDirection: 'column'
                 }}>
-                  <IconButton 
-                    onClick={handleFileSelect}
-                    disabled={uploadingFile || sendingMessage}
-                    sx={{ color: 'white', mr: 1 }}
-                  >
-                    <InsertDriveFile />
-                  </IconButton>
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    style={{ display: 'none' }}
-                    onChange={handleFileChange}
-                    accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar,.jpg,.jpeg,.png,.gif"
-                  />
+                  {selectedFile && selectedFile.name && (
+                    <Box sx={{ 
+                      mb: 1, 
+                      p: 1, 
+                      bgcolor: 'rgba(255, 255, 255, 0.08)', 
+                      borderRadius: 1,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      border: '1px solid rgba(255, 255, 255, 0.12)'
+                    }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <InsertDriveFile sx={{ mr: 1, color: 'rgba(255, 255, 255, 0.7)' }} />
+                        <Typography variant="body2" sx={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: 'rgba(255, 255, 255, 0.7)' }}>
+                          {selectedFile.name}
+                        </Typography>
+                      </Box>
+                      <IconButton size="small" onClick={handleRemoveSelectedFile} sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                        <Close fontSize="small" />
+                      </IconButton>
+                    </Box>
+                  )}
                   
-                  <TextField
-                    multiline
-                    maxRows={4}
-                    variant="outlined"
-                    fullWidth
-                    value={messageInput}
-                    onChange={handleMessageChange}
-                    onKeyDown={handleKeyPress}
-                    disabled={uploadingFile || sendingMessage}
-                    placeholder="Type a message..."
-                    sx={{
-                      mx: 1,
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: 2,
-                        '& fieldset': {
-                          borderColor: 'rgba(255, 255, 255, 0.2)',
-                        },
-                        '&:hover fieldset': {
-                          borderColor: 'rgba(255, 255, 255, 0.3)',
-                        },
-                        '&.Mui-focused fieldset': {
-                          borderColor: 'primary.main',
-                        },
-                        color: 'white',
-                        backgroundColor: 'rgba(255, 255, 255, 0.05)'
-                      },
-                      '& .MuiInputBase-input::placeholder': {
-                        color: 'rgba(255, 255, 255, 0.5)',
-                        opacity: 1
-                      },
-                    }}
-                  />
-                  
-                  <IconButton 
-                    color="primary"
-                    onClick={handleSendMessage}
-                    disabled={(!messageInput.trim() && !selectedFile) || uploadingFile || sendingMessage}
-                    sx={{ ml: 1 }}
-                  >
-                    {(uploadingFile || sendingMessage) ? (
-                      <CircularProgress size={24} />
-                    ) : (
-                      <Send />
-                    )}
-                  </IconButton>
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <IconButton 
+                      sx={{ mr: 2, color: 'rgba(255, 255, 255, 0.7)' }}
+                      onClick={handleFileSelect}
+                      disabled={sendingMessage || uploadingFile}
+                    >
+                      <InsertDriveFile />
+                    </IconButton>
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      style={{ display: 'none' }}
+                      onChange={handleFileChange}
+                    />
+                    <TextField
+                      placeholder="Type a message..."
+                      variant="outlined"
+                      fullWidth
+                      size="small"
+                      value={messageInput}
+                      onChange={handleMessageChange}
+                      onKeyPress={handleKeyPress}
+                      disabled={sendingMessage || uploadingFile}
+                      InputProps={{
+                        sx: {
+                          color: '#fff',
+                          '& .MuiOutlinedInput-notchedOutline': {
+                            borderColor: 'rgba(255, 255, 255, 0.2)',
+                          },
+                          '&:hover .MuiOutlinedInput-notchedOutline': {
+                            borderColor: 'rgba(255, 255, 255, 0.3)',
+                          },
+                          '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                            borderColor: 'primary.main',
+                          },
+                        }
+                      }}
+                    />
+                    
+                    <IconButton 
+                      sx={{ 
+                        ml: 2, 
+                        bgcolor: 'primary.main',
+                        color: '#fff',
+                        '&:hover': {
+                          bgcolor: 'primary.dark',
+                        }
+                      }}
+                      onClick={handleSendMessage}
+                      disabled={(!messageInput.trim() && !selectedFile) || sendingMessage || uploadingFile}
+                    >
+                      {sendingMessage || uploadingFile ? <CircularProgress size={24} sx={{ color: '#fff' }} /> : <Send />}
+                    </IconButton>
+                  </Box>
                 </Box>
               </>
             ) : (
-              <Box 
-                sx={{ 
-                  display: 'flex', 
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  height: '100%',
-                  bgcolor: '#0d1631',
-                  p: 3
-                }}
-              >
-                <Box sx={{ mb: 2 }}>
-                  <Box
-                    component="div"
-                    sx={{
-                      width: 70,
-                      height: 70,
-                      borderRadius: '50%',
-                      bgcolor: 'rgba(255, 255, 255, 0.05)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      mb: 3,
-                      mx: 'auto'
-                    }}
-                  >
-                    <Send sx={{ fontSize: 30, color: 'rgba(255, 255, 255, 0.5)' }} />
-                  </Box>
+              <Box sx={{ 
+                display: 'flex', 
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                height: '100%',
+                p: 3,
+                textAlign: 'center'
+              }}>
+                <Box 
+                  sx={{ 
+                    width: 80,
+                    height: 80,
+                    borderRadius: '50%',
+                    bgcolor: 'rgba(255, 255, 255, 0.1)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    mb: 2
+                  }}
+                >
+                  <Send sx={{ fontSize: 40, color: 'rgba(255, 255, 255, 0.3)' }} />
                 </Box>
-                <Typography variant="h6" align="center" gutterBottom sx={{ color: 'white', fontWeight: 400 }}>
+                <Typography variant="h6" sx={{ color: '#fff', mb: 1 }}>
                   No conversation selected
                 </Typography>
-                <Typography variant="body2" align="center" sx={{ color: 'rgba(255, 255, 255, 0.6)', mb: 3, maxWidth: 450 }}>
+                <Typography variant="body1" sx={{ color: 'rgba(255, 255, 255, 0.7)', maxWidth: 400 }}>
                   Select a contact from the list to start chatting or create a new message
                 </Typography>
-                <Button 
+                
+                <Button
                   variant="contained"
-                  color="primary"
                   startIcon={<Create />}
                   onClick={handleOpenNewMessageDialog}
                   sx={{ 
-                    mt: 2, 
-                    textTransform: 'uppercase', 
-                    px: 3,
-                    py: 1,
-                    bgcolor: '#1976d2',
-                    fontWeight: 500,
-                    letterSpacing: '0.5px',
-                    '&:hover': {
-                      bgcolor: '#0f62b6'
-                    }
+                    mt: 3,
+                    textTransform: 'none',
+                    borderRadius: 2
                   }}
                 >
                   New Message
@@ -1159,201 +1149,119 @@ const Messages: React.FC = () => {
               </Box>
             )}
           </Box>
-        </Box>
-      </Box>
+        </Paper>
+      </Container>
       
       {/* New Message Dialog */}
       <Dialog 
         open={newMessageDialogOpen} 
         onClose={handleCloseNewMessageDialog}
-        maxWidth="sm"
         fullWidth
+        maxWidth="sm"
         PaperProps={{
           sx: {
-            bgcolor: '#0e1b3d',
-            color: 'white',
-            borderRadius: 1,
-            maxWidth: '500px'
+            bgcolor: 'background.default',
+            backgroundImage: 'none',
+            color: 'text.primary'
           }
         }}
       >
-        <DialogTitle sx={{ 
-          color: 'white', 
-          fontSize: '1.25rem', 
-          fontWeight: 500, 
-          bgcolor: '#0e1b3d', 
-          borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-          py: 1.5
-        }}>
-          New Message
-        </DialogTitle>
-        <DialogContent sx={{ p: 0, bgcolor: '#0e1b3d' }}>
-          <Box sx={{ mb: 2, px: 0 }}>
-            <Typography 
-              variant="subtitle2" 
-              sx={{ 
-                px: 2,
-                py: 1.5, 
-                color: 'rgba(255, 255, 255, 0.8)',
-                fontWeight: 400,
-                borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
-              }}
-            >
-              — Search for a user
-            </Typography>
-            <Autocomplete
-              options={availableUsers}
-              getOptionLabel={(option) => option.fullName}
-              renderOption={(props, option) => (
-                <Box 
-                  component="li" 
-                  {...props}
-                  sx={{ 
-                    display: 'flex', 
-                    alignItems: 'center',
-                    color: '#111',
-                    backgroundColor: '#fff',
-                    py: 1
-                  }}
-                >
+        <DialogTitle>New Message</DialogTitle>
+        <DialogContent>
+          <Autocomplete
+            options={availableUsers}
+            getOptionLabel={(option) => `${option.fullName} (${option.email})`}
+            renderOption={(props, option) => (
+              <Box component="li" {...props}>
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
                   <Avatar 
-                    src={option.profileImage || undefined}
-                    sx={{ 
-                      width: 32, 
-                      height: 32, 
-                      mr: 2,
-                      bgcolor: getAvatarBgColor(option.id)
-                    }}
-                  >
-                    {option.fullName.charAt(0)}
-                  </Avatar>
+                    src={option.profileImage || undefined} 
+                    alt={option.fullName}
+                    sx={{ width: 32, height: 32, mr: 1 }}
+                  />
                   <Box>
-                    <Typography variant="body2" sx={{ color: '#111' }}>{option.fullName}</Typography>
-                    <Typography variant="caption" sx={{ color: 'rgba(0, 0, 0, 0.6)' }}>
-                      {option.role} {option.campus ? `• ${option.campus}` : ''}
+                    <Typography variant="body2">{option.fullName}</Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {option.email} • {option.role}
                     </Typography>
                   </Box>
                 </Box>
-              )}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  variant="outlined"
-                  fullWidth
-                  placeholder="Search for users..."
-                  sx={{
-                    mx: 0,
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: 0,
-                      '& fieldset': {
-                        border: 'none',
-                      },
-                      '&:hover fieldset': {
-                        border: 'none',
-                      },
-                      '&.Mui-focused fieldset': {
-                        border: 'none',
-                      },
-                      color: '#111',
-                      backgroundColor: '#fff'
-                    },
-                    '& .MuiInputBase-input::placeholder': {
-                      color: 'rgba(0, 0, 0, 0.6)',
-                      opacity: 1
-                    },
-                  }}
-                />
-              )}
-              inputValue={searchUserInput}
-              onInputChange={handleSearchInputChange}
-              value={selectedUser}
-              onChange={(event, newValue) => {
-                setSelectedUser(newValue);
-              }}
-              loading={creatingConversation}
-              loadingText="Searching users..."
-              popupIcon={<Search sx={{ color: '#1976d2', mr: 1 }} />}
-              sx={{
-                '& .MuiAutocomplete-endAdornment': {
-                  color: '#1976d2'
-                },
-                '& .MuiAutocomplete-paper': {
-                  backgroundColor: '#fff',
-                  color: '#111'
-                },
-                '& .MuiAutocomplete-listbox': {
-                  backgroundColor: '#fff',
-                  color: '#111'
-                }
-              }}
-            />
-          </Box>
+              </Box>
+            )}
+            value={selectedUser}
+            onChange={(_, newValue) => setSelectedUser(newValue)}
+            inputValue={searchUserInput}
+            onInputChange={handleSearchInputChange}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Search for a user"
+                variant="outlined"
+                fullWidth
+                margin="normal"
+                InputProps={{
+                  ...params.InputProps,
+                  startAdornment: (
+                    <>
+                      <InputAdornment position="start">
+                        <Search />
+                      </InputAdornment>
+                      {params.InputProps.startAdornment}
+                    </>
+                  )
+                }}
+              />
+            )}
+          />
           
           <TextField
+            label="Message"
             multiline
             rows={4}
-            variant="outlined"
             fullWidth
+            margin="normal"
             value={messageInput}
             onChange={(e) => setMessageInput(e.target.value)}
-            placeholder="Message"
-            sx={{
-              mt: 0,
-              px: 2,
-              py: 2,
-              '& .MuiOutlinedInput-root': {
-                '& fieldset': {
-                  border: 'none',
-                },
-                '&:hover fieldset': {
-                  border: 'none',
-                },
-                '&.Mui-focused fieldset': {
-                  border: 'none',
-                },
-                color: 'white',
-                backgroundColor: 'transparent'
-              },
-              '& .MuiInputBase-input::placeholder': {
-                color: 'rgba(255, 255, 255, 0.5)',
-                opacity: 1
-              },
-            }}
+            variant="outlined"
           />
+          
+          {/* File Attachment for New Message */}
+          {selectedFile && selectedFile.name && (
+            <Box sx={{ 
+              mt: 1, 
+              p: 1, 
+              bgcolor: 'rgba(255, 255, 255, 0.08)', 
+              borderRadius: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              border: '1px solid rgba(255, 255, 255, 0.12)'
+            }}>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <InsertDriveFile sx={{ mr: 1, color: 'rgba(255, 255, 255, 0.7)' }} />
+                <Typography variant="body2" sx={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: 'rgba(255, 255, 255, 0.7)' }}>
+                  {selectedFile.name}
+                </Typography>
+              </Box>
+              <IconButton size="small" onClick={handleRemoveSelectedFile} sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                <Close fontSize="small" />
+              </IconButton>
+            </Box>
+          )}
         </DialogContent>
-        <DialogActions sx={{ borderTop: '1px solid rgba(255, 255, 255, 0.1)', p: 2, justifyContent: 'space-between' }}>
-          <Button 
-            onClick={handleCloseNewMessageDialog} 
-            sx={{ 
-              color: 'rgba(255, 255, 255, 0.8)',
-              textTransform: 'uppercase',
-              fontWeight: 500,
-              letterSpacing: '0.5px',
-            }}
-          >
-            Cancel
-          </Button>
+        <DialogActions>
+          <Button onClick={handleCloseNewMessageDialog}>CANCEL</Button>
           <Button 
             onClick={handleCreateConversation}
-            variant="contained" 
+            variant="contained"
             color="primary"
-            disabled={!selectedUser || creatingConversation || (uploadingFile && !selectedFile)}
-            sx={{
-              textTransform: 'uppercase',
-              fontWeight: 500,
-              letterSpacing: '0.5px',
-              px: 3,
-              bgcolor: '#1976d2',
-            }}
+            disabled={!selectedUser || creatingConversation}
           >
-            {creatingConversation ? (
-              <CircularProgress size={20} sx={{ mr: 1 }} />
-            ) : null}
-            Start Conversation
+            {creatingConversation ? <CircularProgress size={24} /> : 'START CONVERSATION'}
           </Button>
         </DialogActions>
       </Dialog>
-    </AdminLayout>
+    </FacultyLayout>
   );
 };
 

@@ -25,7 +25,7 @@ import {
   ListItemText,
   Divider,
   Container,
-  useTheme,
+  useTheme as useMuiTheme,
   useMediaQuery
 } from '@mui/material';
 import { 
@@ -47,6 +47,7 @@ import {
 } from '@mui/icons-material';
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import adminService from '../services/AdminService';
 import AdminNotificationMenu from './AdminNotificationMenu';
 
@@ -60,13 +61,23 @@ const drawerWidth = 240;
 const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title }) => {
   const { authState, logout } = useAuth();
   const { user } = authState;
-  const theme = useTheme();
+  const muiTheme = useMuiTheme();
+  const { mode } = useTheme();
   const location = useLocation();
   const navigate = useNavigate();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isMobile = useMediaQuery(muiTheme.breakpoints.down('md'));
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profilePicture, setProfilePicture] = useState<string>('');
   const [firstName, setFirstName] = useState<string>('');
+  
+  // Theme-dependent colors
+  const bgColor = mode === 'dark' ? '#0a1128' : '#ffffff';
+  const textColor = mode === 'dark' ? '#ffffff' : '#212121';
+  const textColorSecondary = mode === 'dark' ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)';
+  const borderColor = mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+  const hoverBgColor = mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)';
+  const activeNavBgColor = mode === 'dark' ? 'rgba(25, 118, 210, 0.15)' : 'rgba(25, 118, 210, 0.08)';
+  const activeNavHoverBgColor = mode === 'dark' ? 'rgba(25, 118, 210, 0.25)' : 'rgba(25, 118, 210, 0.15)';
   
   // Fetch user profile data
   useEffect(() => {
@@ -171,14 +182,14 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title }) => {
   ];
   
   const drawer = (
-    <Box sx={{ bgcolor: '#0a1128', color: 'white', height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Box sx={{ bgcolor: bgColor, color: textColor, height: '100%', display: 'flex', flexDirection: 'column' }}>
       <Box sx={{ 
         p: 2,
         display: 'flex',
         alignItems: 'center',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+        borderBottom: `1px solid ${borderColor}`
       }}>
-        <AdminPanelSettings sx={{ mr: 1.5, fontSize: 28 }} />
+        <AdminPanelSettings sx={{ mr: 1.5, fontSize: 28, color: muiTheme.palette.primary.main }} />
         <Typography variant="h6" component="div" sx={{ fontWeight: 'bold' }}>
           ISCP Admin
         </Typography>
@@ -192,19 +203,19 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title }) => {
             sx={{ 
               py: 1.5,
               px: 3,
-              color: item.active ? '#fff' : 'rgba(255, 255, 255, 0.7)',
-              bgcolor: item.active ? 'rgba(25, 118, 210, 0.15)' : 'transparent',
+              color: item.active ? textColor : textColorSecondary,
+              bgcolor: item.active ? activeNavBgColor : 'transparent',
               '&:hover': { 
-                bgcolor: item.active ? 'rgba(25, 118, 210, 0.25)' : 'rgba(255, 255, 255, 0.05)',
-                color: '#fff',
+                bgcolor: item.active ? activeNavHoverBgColor : hoverBgColor,
+                color: textColor,
               },
-              borderLeft: item.active ? `4px solid ${theme.palette.primary.main}` : '4px solid transparent',
+              borderLeft: item.active ? `4px solid ${muiTheme.palette.primary.main}` : '4px solid transparent',
               textDecoration: 'none',
               transition: 'all 0.2s ease'
             }}
           >
             <ListItemIcon sx={{ 
-              color: item.active ? theme.palette.primary.main : 'rgba(255, 255, 255, 0.7)',
+              color: item.active ? muiTheme.palette.primary.main : textColorSecondary,
               minWidth: 40 
             }}>
               {item.icon}
@@ -219,22 +230,22 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title }) => {
           </ListItem>
         ))}
       </List>
-      <Box sx={{ p: 2, borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
+      <Box sx={{ p: 2, borderTop: `1px solid ${borderColor}` }}>
         <ListItem 
           onClick={handleLogout}
           sx={{ 
             py: 1.5,
             px: 3,
-            color: 'rgba(255, 255, 255, 0.7)',
+            color: textColorSecondary,
             '&:hover': { 
-              bgcolor: 'rgba(255, 255, 255, 0.05)',
-              color: '#fff',
+              bgcolor: hoverBgColor,
+              color: textColor,
             },
             cursor: 'pointer',
             borderRadius: 1
           }}
         >
-          <ListItemIcon sx={{ color: 'rgba(255, 255, 255, 0.7)', minWidth: 40 }}>
+          <ListItemIcon sx={{ color: textColorSecondary, minWidth: 40 }}>
             <Logout />
           </ListItemIcon>
           <ListItemText 
@@ -251,7 +262,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title }) => {
       display: 'flex', 
       minHeight: '100vh',
       width: '100%',
-      bgcolor: '#0a1128'
+      bgcolor: bgColor
     }}>
       <AppBar
         position="fixed"
@@ -259,56 +270,48 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title }) => {
           width: { md: `calc(100% - ${drawerWidth}px)` },
           ml: { md: `${drawerWidth}px` },
           boxShadow: 'none',
-          bgcolor: '#0a1128',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+          bgcolor: bgColor,
+          borderBottom: `1px solid ${borderColor}`
         }}
         elevation={0}
       >
-        <Toolbar sx={{ display: 'flex', padding: 0, backgroundColor: '#0a1128', minHeight: 64 }}>
+        <Toolbar sx={{ display: 'flex', padding: 0, backgroundColor: bgColor, minHeight: 64 }}>
           <IconButton
             color="inherit"
             aria-label="open drawer"
             edge="start"
             onClick={handleDrawerToggle}
-            sx={{ display: { md: 'none' }, color: '#fff' }}
+            sx={{ display: { md: 'none' }, color: textColor }}
           >
             <MenuIcon />
           </IconButton>
           
-          <Typography 
-            variant="h6" 
+          <Typography
+            variant="h6"
             component="div"
             sx={{ 
-              fontWeight: 600,
-              color: '#fff',
-              flexGrow: 1
+              fontWeight: 'bold', 
+              color: textColor,
+              flexGrow: 1,
+              ml: { xs: 1, md: 0 }
             }}
           >
             {title}
           </Typography>
           
-          {/* Right Icons */}
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <AdminNotificationMenu />
-            
-            <Box sx={{ display: 'flex', alignItems: 'center', ml: 2 }}>
-              <Avatar 
-                src={profilePicture}
-                sx={{ 
-                  width: 36, 
-                  height: 36, 
-                  bgcolor: theme.palette.error.main,
-                  border: '2px solid rgba(255, 255, 255, 0.2)' 
-                }}
-              >
-                {!profilePicture && (firstName ? firstName.charAt(0) : (user?.fullName ? user.fullName.charAt(0) : 'A'))}
-              </Avatar>
-              <Typography 
-                variant="subtitle2" 
-                sx={{ ml: 1, display: { xs: 'none', sm: 'block' }, color: '#fff' }}
-                fontWeight="medium"
-              >
-                {firstName || user?.fullName || 'Admin User'}
+          <AdminNotificationMenu />
+          
+          <Box sx={{ display: 'flex', alignItems: 'center', bgcolor: bgColor }}>
+            <Avatar
+              src={profilePicture}
+              alt={firstName || "Admin"}
+              sx={{ width: 40, height: 40 }}
+            >
+              {!profilePicture && (firstName ? firstName.charAt(0) : 'A')}
+            </Avatar>
+            <Box sx={{ ml: 1, display: { xs: 'none', sm: 'block' } }}>
+              <Typography sx={{ color: textColor, fontWeight: 500, lineHeight: 1.2 }}>
+                {firstName || "Admin"}
               </Typography>
             </Box>
           </Box>
@@ -319,37 +322,25 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title }) => {
         component="nav"
         sx={{ width: { md: drawerWidth }, flexShrink: { md: 0 } }}
       >
-        {/* Mobile drawer */}
         <Drawer
           variant="temporary"
           open={mobileOpen}
           onClose={handleDrawerToggle}
           ModalProps={{
-            keepMounted: true // Better open performance on mobile
+            keepMounted: true, // Better open performance on mobile.
           }}
           sx={{
             display: { xs: 'block', md: 'none' },
-            '& .MuiDrawer-paper': { 
-              boxSizing: 'border-box', 
-              width: drawerWidth,
-              bgcolor: '#0a1128'
-            },
+            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
           }}
         >
           {drawer}
         </Drawer>
-        
-        {/* Desktop drawer */}
         <Drawer
           variant="permanent"
           sx={{
             display: { xs: 'none', md: 'block' },
-            '& .MuiDrawer-paper': { 
-              boxSizing: 'border-box', 
-              width: drawerWidth,
-              bgcolor: '#0a1128',
-              borderRight: '1px solid rgba(255, 255, 255, 0.1)'
-            },
+            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
           }}
           open
         >
@@ -357,19 +348,28 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title }) => {
         </Drawer>
       </Box>
       
-      {/* Main content */}
-      <Box component="main" sx={{ 
-        flexGrow: 1, 
-        p: 3, 
-        width: { md: `calc(100% - ${drawerWidth}px)` }, 
-        minHeight: '100vh',
-        bgcolor: '#0a1128',
-        color: 'white',
-        pt: { xs: 9, md: 10 }
-      }}>
-        <Container maxWidth="xl">
+      <Box
+        component="main"
+        sx={{ 
+          flexGrow: 1, 
+          width: { md: `calc(100% - ${drawerWidth}px)` },
+          minHeight: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
+          bgcolor: bgColor,
+          overflow: 'hidden'
+        }}
+      >
+        <Toolbar /> {/* Spacer for AppBar */}
+        <Box sx={{ 
+          flexGrow: 1, 
+          bgcolor: bgColor, 
+          color: textColor, 
+          width: '100%',
+          backgroundImage: 'none'
+        }}>
           {children}
-        </Container>
+        </Box>
       </Box>
     </Box>
   );

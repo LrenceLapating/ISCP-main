@@ -2,7 +2,7 @@
  * authController.js
  * 
  * Author: Josiephous Pierre Dosdos
- * Date: May 17, 2025
+ * Date: April 9, 2025
  * Assignment: ISCP Learning Management System
  * 
  * Description: Authentication controller handling user registration,

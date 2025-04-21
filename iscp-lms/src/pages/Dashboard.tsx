@@ -1,7 +1,7 @@
 /**
  * Dashboard.tsx
  * 
- * Author: Marc Laurence Lapating
+ * Author: MARC MAURICE M. COSTILLAS
  * Date: April 3, 2025
  * Assignment: ISCP Learning Management System
  * 

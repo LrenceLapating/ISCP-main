@@ -1,8 +1,8 @@
 /**
  * auth.types.ts
  * 
- * Author: Josiephous Pierre Dosdos
- * Date: May 16, 2025
+ * Author: Marc Laurence Lapating
+ * Date: April 2, 2025
  * Assignment: ISCP Learning Management System
  * 
  * Description: Authentication type definitions for handling user authentication,

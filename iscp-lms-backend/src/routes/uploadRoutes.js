@@ -2,7 +2,7 @@
  * uploadRoutes.js
  * 
  * Author: Marc Laurence Lapating
- * Date: May 23, 2025
+ * Date: April 10, 2025
  * Assignment: ISCP Learning Management System
  * 
  * Description: File upload routes for handling document, image, and

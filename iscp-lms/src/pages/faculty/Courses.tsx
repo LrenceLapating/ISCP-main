@@ -1,7 +1,7 @@
 /**
  * Courses.tsx (Faculty)
  * 
- * Author: Marc Laurence Lapating
+ * Author: MARC MAURICE M. COSTILLAS
  * Date: April 7, 2025
  * Assignment: ISCP Learning Management System
  * 
@@ -242,6 +242,17 @@ const Courses: React.FC = () => {
     setRequestSubmitting(true);
     setRequestError(null);
     
+    // Check if this course code already exists in pending requests
+    const isDuplicate = pendingCourses.some(course => 
+      course.code.toLowerCase() === courseRequest.code.toLowerCase()
+    );
+    
+    if (isDuplicate) {
+      setRequestError('You already have a pending request for this course code.');
+      setRequestSubmitting(false);
+      return;
+    }
+    
     try {
       await facultyService.requestCourse(courseRequest);
       setRequestSuccess(true);
@@ -259,9 +270,19 @@ const Courses: React.FC = () => {
       setTimeout(() => {
         handleCourseRequestDialogClose();
       }, 1500);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error submitting course request:', err);
-      setRequestError('Failed to submit course request. Please try again.');
+      
+      // Handle different error messages
+      if (err.message === 'Course code already exists') {
+        setRequestError('This course code already exists in the system. Please use a different code.');
+      } else if (err.message === 'You already have a pending request for this course code') {
+        setRequestError('You already have a pending request for this course code. Check the Pending Requests tab.');
+        // Switch to pending tab to show the existing request
+        setTabValue('pending');
+      } else {
+        setRequestError('Failed to submit course request. Please try again.');
+      }
     } finally {
       setRequestSubmitting(false);
     }

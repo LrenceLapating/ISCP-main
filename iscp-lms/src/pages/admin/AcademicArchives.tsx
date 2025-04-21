@@ -1,7 +1,7 @@
 /**
  * AcademicArchives.tsx
  * 
- * Author: Marc Laurence Lapating
+ * Author: MARC MAURICE M. COSTILLAS
  * Date: April 13, 2025
  * Assignment: ISCP Learning Management System
  * 

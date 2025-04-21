@@ -2,7 +2,7 @@
  * archiveController.js
  * 
  * Author: Josiephous Pierre Dosdos
- * Date: May 22, 2025
+ * Date: April 9, 2025
  * Assignment: ISCP Learning Management System
  * 
  * Description: Archive controller for managing academic archives, historical

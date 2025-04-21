@@ -2,7 +2,7 @@
  * adminController.js
  * 
  * Author: Marc Laurence Lapating
- * Date: May 20, 2025
+ * Date: April 9, 2025
  * Assignment: ISCP Learning Management System
  * 
  * Description: Administrator controller handling user management, dashboard
@@ -758,7 +758,7 @@ exports.updateCourseRequestStatus = async (req, res) => {
     
     // Check if course exists
     const [courseCheck] = await pool.query(
-      'SELECT c.*, u.full_name as instructor_name FROM courses c JOIN users u ON c.instructor_id = u.id WHERE c.id = ?',
+      'SELECT c.*, u.full_name as instructor_name, u.id as faculty_id, c.code as course_code FROM courses c JOIN users u ON c.instructor_id = u.id WHERE c.id = ?',
       [id]
     );
     
@@ -781,15 +781,24 @@ exports.updateCourseRequestStatus = async (req, res) => {
       ]
     );
     
-    // If approved, notify students in the same campus
+    // If approved, notify faculty and students in the same campus
     if (request_status === 'approved') {
+      // Notify the faculty member who requested the course
+      await notificationHelpers.notifyCourseApproval(
+        courseCheck[0].faculty_id,
+        id,
+        courseCheck[0].name,
+        courseCheck[0].course_code
+      );
+    
+      // Notify students in the same campus
       const [students] = await pool.query(
         'SELECT id FROM users WHERE role = "student" AND campus = ?',
         [courseCheck[0].campus]
       );
       
       for (const student of students) {
-        // Assuming notification helper function exists
+        // Notify each student about the new course
         await notificationHelpers.notifyCourseAvailable(
           student.id,
           id,

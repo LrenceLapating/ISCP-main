@@ -751,7 +751,6 @@ const Settings: React.FC = () => {
                   >
                     <Tab icon={<Person sx={{ fontSize: 20 }} />} iconPosition="start" label={language === 'English' ? 'Profile' : 'Profile'} />
                     <Tab icon={<Security sx={{ fontSize: 20 }} />} iconPosition="start" label={language === 'English' ? 'Password & Security' : 'Password at Seguridad'} />
-                    <Tab icon={<Notifications sx={{ fontSize: 20 }} />} iconPosition="start" label={language === 'English' ? 'Notifications' : 'Mga Notipikasyon'} />
                     <Tab icon={<ColorLens sx={{ fontSize: 20 }} />} iconPosition="start" label={language === 'English' ? 'Appearance' : 'Hitsura'} />
                   </Tabs>
                 </Box>
@@ -1104,139 +1103,11 @@ const Settings: React.FC = () => {
                   </Box>
                 </TabPanel>
 
-                {/* Notifications Tab */}
+                {/* Appearance Tab */}
                 <TabPanel value={tabValue} index={2}>
                   <Box sx={{ p: { xs: 2, sm: 3 } }}>
                     <Typography variant="h6" gutterBottom sx={{ color: '#fff', fontWeight: 600 }}>
-                      {language === 'English' ? 'Notification Preferences' : 'Mga Kagustuhan sa Notipikasyon'}
-                    </Typography>
-                    
-                    <List sx={{ width: '100%' }}>
-                      <ListItem>
-                        <ListItemIcon>
-                          <Notifications sx={{ color: 'rgba(255, 255, 255, 0.7)' }} />
-                        </ListItemIcon>
-                        <ListItemText 
-                          primary="Email Notifications" 
-                          secondary="Receive email updates about your account"
-                          primaryTypographyProps={{ color: '#fff' }}
-                          secondaryTypographyProps={{ color: 'rgba(255, 255, 255, 0.7)' }}
-                        />
-                        <ListItemSecondaryAction>
-                          <Switch
-                            name="preferences.notifications.email"
-                            checked={profile.preferences.notifications.email}
-                            onChange={handleProfileChange}
-                            edge="end"
-                            color="primary"
-                          />
-                        </ListItemSecondaryAction>
-                      </ListItem>
-                      
-                      <ListItem>
-                        <ListItemIcon>
-                          <Notifications sx={{ color: 'rgba(255, 255, 255, 0.7)' }} />
-                        </ListItemIcon>
-                        <ListItemText 
-                          primary="Push Notifications" 
-                          secondary="Receive push notifications on this device"
-                          primaryTypographyProps={{ color: '#fff' }}
-                          secondaryTypographyProps={{ color: 'rgba(255, 255, 255, 0.7)' }}
-                        />
-                        <ListItemSecondaryAction>
-                          <Switch
-                            name="preferences.notifications.push"
-                            checked={profile.preferences.notifications.push}
-                            onChange={handleProfileChange}
-                            edge="end"
-                            color="primary"
-                          />
-                        </ListItemSecondaryAction>
-                      </ListItem>
-                      
-                      <Divider sx={{ my: 2, bgcolor: 'rgba(255, 255, 255, 0.1)' }} />
-                      
-                      <Typography variant="subtitle2" gutterBottom sx={{ color: '#fff', fontWeight: 600, px: 2 }}>
-                        Notification Types
-                      </Typography>
-                      
-                      <ListItem>
-                        <ListItemText 
-                          primary="Assignment Updates" 
-                          secondary="Notifications about assignments, due dates and grades"
-                          primaryTypographyProps={{ color: '#fff' }}
-                          secondaryTypographyProps={{ color: 'rgba(255, 255, 255, 0.7)' }}
-                        />
-                        <ListItemSecondaryAction>
-                          <Switch
-                            name="preferences.notifications.assignments"
-                            checked={profile.preferences.notifications.assignments}
-                            onChange={handleProfileChange}
-                            edge="end"
-                            color="primary"
-                          />
-                        </ListItemSecondaryAction>
-                      </ListItem>
-                      
-                      <ListItem>
-                        <ListItemText 
-                          primary="Messages" 
-                          secondary="Notifications about new messages from instructors and classmates"
-                          primaryTypographyProps={{ color: '#fff' }}
-                          secondaryTypographyProps={{ color: 'rgba(255, 255, 255, 0.7)' }}
-                        />
-                        <ListItemSecondaryAction>
-                          <Switch
-                            name="preferences.notifications.messages"
-                            checked={profile.preferences.notifications.messages}
-                            onChange={handleProfileChange}
-                            edge="end"
-                            color="primary"
-                          />
-                        </ListItemSecondaryAction>
-                      </ListItem>
-                      
-                      <ListItem>
-                        <ListItemText 
-                          primary="Announcements" 
-                          secondary="Receive notifications about assignments, messages and announcements"
-                          primaryTypographyProps={{ color: '#fff' }}
-                          secondaryTypographyProps={{ color: 'rgba(255, 255, 255, 0.7)' }}
-                        />
-                        <ListItemSecondaryAction>
-                          <Switch
-                            name="preferences.notifications.announcements"
-                            checked={profile.preferences.notifications.announcements}
-                            onChange={handleProfileChange}
-                            edge="end"
-                            color="primary"
-                          />
-                        </ListItemSecondaryAction>
-                      </ListItem>
-                    </List>
-                    
-                    <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
-                      <Button 
-                        variant="contained" 
-                        startIcon={<Save />}
-                        onClick={handleSaveProfile}
-                        disabled={saving}
-                        sx={{ borderRadius: 2, px: 3 }}
-                      >
-                        {saving ? 
-                          (language === 'English' ? 'Saving...' : 'Nag-sasave...') : 
-                          (language === 'English' ? 'Save Preferences' : 'I-save ang mga Kagustuhan')
-                        }
-                      </Button>
-                    </Box>
-                  </Box>
-                </TabPanel>
-
-                {/* Appearance Tab */}
-                <TabPanel value={tabValue} index={3}>
-                  <Box sx={{ p: { xs: 2, sm: 3 } }}>
-                    <Typography variant="h6" gutterBottom sx={{ color: '#fff', fontWeight: 600 }}>
-                      {t('appearanceSettings')}
+                      {language === 'English' ? 'Appearance Settings' : 'Mga Setting ng Hitsura'}
                     </Typography>
                     
                     <List sx={{ width: '100%' }}>

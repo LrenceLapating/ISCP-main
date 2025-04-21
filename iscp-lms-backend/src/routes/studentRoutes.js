@@ -2,7 +2,7 @@
  * studentRoutes.js
  * 
  * Author: Josiephous Pierre Dosdos
- * Date: May 19, 2025
+ * Date: April 12, 2025
  * Assignment: ISCP Learning Management System
  * 
  * Description: Student routes for course enrollment, assignment submissions,

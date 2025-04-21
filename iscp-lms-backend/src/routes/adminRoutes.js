@@ -2,7 +2,7 @@
  * adminRoutes.js
  * 
  * Author: Marc Laurence Lapating
- * Date: May 21, 2025
+ * Date: April 10, 2025
  * Assignment: ISCP Learning Management System
  * 
  * Description: Administrator routes for user management, dashboard
@@ -107,7 +107,7 @@ router.patch('/courses/:courseId/status', verifyToken, isAdmin, async (req, res)
     
     // Check if course exists
     const [courseCheck] = await pool.query(
-      'SELECT c.*, u.full_name as instructor_name FROM courses c JOIN users u ON c.instructor_id = u.id WHERE c.id = ?',
+      'SELECT c.*, u.full_name as instructor_name, u.id as faculty_id, c.code as course_code FROM courses c JOIN users u ON c.instructor_id = u.id WHERE c.id = ?',
       [courseId]
     );
     
@@ -121,7 +121,8 @@ router.patch('/courses/:courseId/status', verifyToken, isAdmin, async (req, res)
         'UPDATE courses SET status = ? WHERE id = ?',
         [request_status, courseId]
       );
-    } else {
+    }
+    else {
       // For approve/reject, update the course status
       const newStatus = request_status === 'approved' ? 'active' : 'inactive';
       
@@ -140,8 +141,16 @@ router.patch('/courses/:courseId/status', verifyToken, isAdmin, async (req, res)
         courseId
       ]);
       
-      // If approved, notify students in the same campus
+      // If approved, notify faculty member and students in the same campus
       if (request_status === 'approved') {
+        // Notify the faculty member who requested the course
+        await notificationHelpers.notifyCourseApproval(
+          courseCheck[0].faculty_id,
+          courseId,
+          courseCheck[0].name,
+          courseCheck[0].course_code
+        );
+      
         // Get all students in the same campus as the course
         const [students] = await pool.query(
           'SELECT id FROM users WHERE role = "student" AND campus = ?',
@@ -161,8 +170,18 @@ router.patch('/courses/:courseId/status', verifyToken, isAdmin, async (req, res)
       
       // If rejected, notify the instructor
       if (request_status === 'rejected') {
-        console.log(`Course ${courseId} rejected. Notifying instructor ${courseCheck[0].instructor_id}`);
-        // Notification logic for instructor would go here
+        console.log(`Course ${courseId} rejected. Notifying instructor ${courseCheck[0].faculty_id}`);
+        // Send rejection notification to faculty
+        const title = 'Course Request Rejected';
+        const message = `Your course request "${courseCheck[0].course_code}: ${courseCheck[0].name}" was rejected. Reason: ${request_notes || 'No reason provided'}`;
+        
+        await notificationHelpers.createNotification(
+          courseCheck[0].faculty_id,
+          title,
+          message,
+          'course',
+          courseId
+        );
       }
     }
     

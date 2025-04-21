@@ -2,7 +2,7 @@
  * userRoutes.js
  * 
  * Author: Marc Laurence Lapating
- * Date: May 22, 2025
+ * Date: April 12, 2025
  * Assignment: ISCP Learning Management System
  * 
  * Description: User management routes for handling user profiles,

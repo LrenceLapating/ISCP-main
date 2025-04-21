@@ -2,7 +2,7 @@
  * auth.js
  * 
  * Author: Josiephous Pierre Dosdos
- * Date: May 18, 2025
+ * Date: April 9, 2025
  * Assignment: ISCP Learning Management System
  * 
  * Description: Authentication middleware for verifying JWT tokens,

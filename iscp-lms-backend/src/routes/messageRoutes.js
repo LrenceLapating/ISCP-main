@@ -2,7 +2,7 @@
  * messageRoutes.js
  * 
  * Author: Josiephous Pierre Dosdos
- * Date: May 25, 2025
+ * Date: April 10, 2025
  * Assignment: ISCP Learning Management System
  * 
  * Description: Message routes for user-to-user communication,

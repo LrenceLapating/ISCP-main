@@ -432,6 +432,28 @@ const notifyCourseRequest = async (courseId, facultyName, courseTitle, courseCod
   }
 };
 
+// Notification for when a course request is approved by admin
+const notifyCourseApproval = async (facultyId, courseId, courseTitle, courseCode) => {
+  try {
+    // Create a notification for the faculty member
+    const title = 'Course Request Approved';
+    const message = `Your course request "${courseCode}: ${courseTitle}" has been approved and is now active.`;
+    
+    await createNotification(
+      facultyId,
+      title,
+      message,
+      'course',
+      courseId
+    );
+    
+    return true;
+  } catch (error) {
+    console.error('Error creating course approval notification:', error);
+    return null;
+  }
+};
+
 module.exports = {
   createNotification,
   shouldSendNotification,
@@ -444,5 +466,6 @@ module.exports = {
   notifyAssignmentSubmission,
   notifyDiscussionReply,
   notifyCourseEnrollment,
-  notifyCourseRequest
+  notifyCourseRequest,
+  notifyCourseApproval
 };

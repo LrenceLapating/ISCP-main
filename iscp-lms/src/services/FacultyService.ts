@@ -1,7 +1,7 @@
 /**
  * FacultyService.ts
  * 
- * Author: Marc Laurence Lapating
+ * Author: MARC MAURICE M. COSTILLAS
  * Date: April 1, 2025
  * Assignment: ISCP Learning Management System
  * 
@@ -1223,7 +1223,12 @@ class FacultyService {
         console.log('Course request submitted successfully:', response.data);
         return response.data;
       } catch (apiError: any) {
-        console.error('API error when requesting course:', apiError.message);
+        console.error('API error when requesting course:', apiError);
+        
+        // If a specific error response comes from the server, propagate it
+        if (apiError.response && apiError.response.data && apiError.response.data.message) {
+          throw new Error(apiError.response.data.message);
+        }
         
         // If we're in development mode or API is not available,
         // simulate a successful response for demonstration

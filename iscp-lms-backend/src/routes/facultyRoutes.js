@@ -2,7 +2,7 @@
  * facultyRoutes.js
  * 
  * Author: Josiephous Pierre Dosdos
- * Date: May 18, 2025
+ * Date: April 10, 2025
  * Assignment: ISCP Learning Management System
  * 
  * Description: Faculty routes for course management, assignment creation,
@@ -125,7 +125,7 @@ router.post('/courses/request', verifyToken, isTeacher, async (req, res) => {
     const facultyCampus = facultyInfo[0].campus;
     const facultyName = facultyInfo[0].full_name;
     
-    // Check if course code already exists
+    // Check if course code already exists globally
     const [existingCourse] = await pool.query(
       'SELECT * FROM courses WHERE code = ?',
       [code]
@@ -133,6 +133,16 @@ router.post('/courses/request', verifyToken, isTeacher, async (req, res) => {
     
     if (existingCourse.length > 0) {
       return res.status(409).json({ message: 'Course code already exists' });
+    }
+    
+    // Check if faculty already has a pending request for this course code
+    const [existingRequest] = await pool.query(
+      'SELECT * FROM courses WHERE code = ? AND instructor_id = ? AND request_status = "pending"',
+      [code, req.user.id]
+    );
+    
+    if (existingRequest.length > 0) {
+      return res.status(409).json({ message: 'You already have a pending request for this course code' });
     }
     
     // Insert the course with pending status

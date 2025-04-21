@@ -1,7 +1,7 @@
 /**
  * NotificationDropdown.tsx
  * 
- * Author: Marc Laurence Lapating
+ * Author: MARC MAURICE M. COSTILLAS
  * Date: March 30, 2025
  * Assignment: ISCP Learning Management System
  * 

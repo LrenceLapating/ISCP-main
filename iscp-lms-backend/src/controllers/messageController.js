@@ -2,7 +2,7 @@
  * messageController.js
  * 
  * Author: Josiephous Pierre Dosdos
- * Date: May 25, 2025
+ * Date: April 9, 2025
  * Assignment: ISCP Learning Management System
  * 
  * Description: Message controller handling communication between users,

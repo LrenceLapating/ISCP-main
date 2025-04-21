@@ -2,7 +2,7 @@
  * authRoutes.js
  * 
  * Author: Josiephous Pierre Dosdos
- * Date: May 17, 2025
+ * Date: April 10, 2025
  * Assignment: ISCP Learning Management System
  * 
  * Description: Authentication routes for user registration, login,
